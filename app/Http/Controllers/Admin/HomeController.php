@@ -3,9 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Club;
-use App\Models\ClubMember;
-use App\Models\ClubUser;
 use App\Models\Configuration;
 use App\Models\MicroSite;
 use App\Models\Setting;
@@ -24,8 +21,8 @@ class HomeController extends Controller
     }
     public function index(Request $request)
     {
-        $club = auth()->guard('club')->user();
+       
 
-        return view('admin.home',);
+        return view('admin.home');
     }
 }

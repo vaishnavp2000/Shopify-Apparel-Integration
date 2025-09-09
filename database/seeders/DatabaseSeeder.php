@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\ClubUser;
+
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -17,13 +17,6 @@ class DatabaseSeeder extends Seeder
         User::create([
             'name' => 'Superadmin',
             'email' => 'superadmin@gmail.com',
-            'password' => bcrypt('12345678'),
-        ]);
-        
-        // Create Clubadmin
-        ClubUser::create([
-            'name' => 'Clubadmin',
-            'email' => 'clubadmin@gmail.com',
             'password' => bcrypt('12345678'),
         ]);
     }

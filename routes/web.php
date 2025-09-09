@@ -18,13 +18,3 @@ Route::prefix('admin')->name('admin.')->namespace('App\Http\Controllers\Admin')-
     
     });
 });
-
-// Club
-Route::prefix('club')->name('club.')->namespace('App\Http\Controllers\Club')->group(function () {
-    Auth::routes(['register' => false]);
-    Route::middleware(['auth:club'])->group(function () {
-        Route::get('/', [App\Http\Controllers\Club\HomeController::class, 'index'])->name('dashboard');
-       
-        
-    });
-});
