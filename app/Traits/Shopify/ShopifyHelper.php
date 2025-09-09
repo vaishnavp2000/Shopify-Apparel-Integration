@@ -97,6 +97,7 @@ trait ShopifyHelper
                         'style_number' => $product['node']['handle'] ?? null,
                         'price' => $product['node']['priceRange']['minVariantPrice']['amount']  ?? null,
                         'image' => $product['node']['featuredImage']['transformedSrc'] ?? null,
+                        'shopify_handle' => $product['node']['handle'] ?? null,
                     ]
                 );
 

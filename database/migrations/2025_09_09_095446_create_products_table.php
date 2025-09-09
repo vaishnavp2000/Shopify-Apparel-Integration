@@ -22,6 +22,7 @@ return new class extends Migration
             $table->longText('description')->nullable();
             $table->string('image')->nullable();
             $table->string('shopify_product_id')->nullable();
+            $table->string('shopify_handle')->nullable();
             $table->string('title')->nullable();
             $table->string('total_variants')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();

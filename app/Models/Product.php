@@ -17,6 +17,7 @@ class Product extends Model
         'price',
         'description',
         'image',
-        'shopify_product_id'
+        'shopify_product_id',
+        'shopify_handle'
       ];
 }

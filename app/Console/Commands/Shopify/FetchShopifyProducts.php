@@ -20,7 +20,7 @@ class FetchShopifyProducts extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Fetch the shopify products saves it into db';
 
     /**
      * Execute the console command.

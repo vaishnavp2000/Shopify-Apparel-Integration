@@ -33,5 +33,40 @@ trait ApiHelper
         }
 
     }
+    public function apparelMagicApiRequest($url, $params)
+    {
+        try {
+            // Log::info('Fetching Apparel page', ['url' => $baseUrl, 'params' => $params]);
+            $request = Http::accept('application/json')
+                ->get($url, $params)
+                ->throw();
+            return $request->json();
+        } catch (HttpClientException $e) {
+            return (['status' => 'failure', 'statusCode' => $e->getCode(), 'message' => $e->getMessage()]);
+        } catch (ConnectionException $e) {
+            return (['status' => 'failure', 'statusCode' => $e->getCode(), 'message' => $e->getMessage()]);
+        } catch (RequestException $e) {
+            return (['status' => 'failure', 'statusCode' => $e->getCode(), 'message' => $e->getMessage()]);
+        }
+    }
+     public function apparelMagicApiPostRequest($url, $params, $headers = [])
+    {
+        try {
+            $request = Http::withHeaders($headers)
+                ->accept('application/json')
+                ->post($url, $params)
+                ->throw();
+
+            return $request->json();
+        } catch (HttpClientException $e) {
+            return ['status' => 'failure', 'statusCode' => $e->getCode(), 'message' => $e->getMessage()];
+        } catch (ConnectionException $e) {
+            return ['status' => 'failure', 'statusCode' => $e->getCode(), 'message' => $e->getMessage()];
+        } catch (RequestException $e) {
+            return ['status' => 'failure', 'statusCode' => $e->getCode(), 'message' => $e->getMessage()];
+        }
+    }
+
+
 
 }
