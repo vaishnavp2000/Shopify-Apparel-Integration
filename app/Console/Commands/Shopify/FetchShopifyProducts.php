@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands\Shopify;
 
+use App\Jobs\Shopify\GetShopifyProducts;
+use App\Models\Setting;
 use Illuminate\Console\Command;
 
 class FetchShopifyProducts extends Command
@@ -25,6 +27,11 @@ class FetchShopifyProducts extends Command
      */
     public function handle()
     {
-        //
+        $settings = Setting::where('type','shopify')->where('status',1)->get();
+        $limit=200;
+        $reverse=false;
+        $nextPageCursor = null;
+        $variantCount=10;
+        GetShopifyProducts::dispatch((int) $limit,$reverse,$variantCount,$nextPageCursor,$settings);
     }
 }

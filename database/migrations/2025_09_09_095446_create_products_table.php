@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('products', function (Blueprint $table) {
-             $table->id();
+            $table->id();
             $table->string('product_id')->nullable();
             $table->string('size_range_id')->nullable();
             $table->tinyInteger('is_product')->nullable();
@@ -22,6 +22,8 @@ return new class extends Migration
             $table->longText('description')->nullable();
             $table->string('image')->nullable();
             $table->string('shopify_product_id')->nullable();
+            $table->string('title')->nullable();
+            $table->string('total_variants')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

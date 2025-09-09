@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('sku_id')->nullable();
             $table->string('sku_concat')->nullable();
             $table->string('sku_alt')->nullable();
+            $table->string('style_number')->nullable();
             $table->string('color')->nullable();
             $table->string('size')->nullable();
             $table->string('upc_display')->nullable();

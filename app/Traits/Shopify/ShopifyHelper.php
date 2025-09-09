@@ -1,9 +1,15 @@
 <?php
 
-namespace App\Traits\Traits;
+namespace App\Traits\Shopify;
+
+use App\Jobs\Shopify\GetShopifyProducts;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Traits\ApiHelper;
 
 trait ShopifyHelper
 {
+    use ApiHelper;
      public function fetchProducts($limit, $reverse, $variantCount, $nextPageCursor, $settings)
     {
         $location = $settings->where('code', 'shopify_location')->first()->value ?? null;
@@ -73,12 +79,12 @@ trait ShopifyHelper
 
         $variables = ['limit' => $limit, 'reverse' => $reverse, 'nextPageCursor' => $nextPageCursor, 'location' => $location];
         $shopifyresponse = $this->getHttp($queryString, $variables);
-        Log::info("Shopify response" . json_encode($shopifyresponse));
+        info("Shopify response" . json_encode($shopifyresponse));
         if (!empty($shopifyresponse)) {
             $shopifyProducts = $shopifyresponse['data']['products']['edges'];
             foreach ($shopifyProducts as $product) {
                 if($product['node']['id']=='gid://shopify/Product/7240295776433'){
-                 Log::info("node id" . json_encode($product));   
+                 info("node id" . json_encode($product));   
                 }
                 $products = Product::updateOrCreate(
                     [
@@ -88,7 +94,6 @@ trait ShopifyHelper
                         'total_variants'=> $product['node']['totalVariants'] ?? null,
                         'title'=> $product['node']['title'] ?? null,
                         'description' => $product['node']['description'] ?? null,
-                        'shopify_handle' => $product['node']['handle'] ?? null,
                         'style_number' => $product['node']['handle'] ?? null,
                         'price' => $product['node']['priceRange']['minVariantPrice']['amount']  ?? null,
                         'image' => $product['node']['featuredImage']['transformedSrc'] ?? null,
@@ -127,42 +132,15 @@ trait ShopifyHelper
                         $variantsCollection[] = $productVariants;
                     }
                 }
-                // $response = $this->getProductByStyleNumber($product['node']['handle']);
-                // if (empty($response['response'])) {
-                //     $this->createAmProducts($products, $variantsCollection);
-                // } else {
-                //     if (!empty($response['response'])) {
-                //         $item = $response['response'][0];
-                //         //  info('updated');
-
-                //         $product = Product::where('style_number', $item['style_number'])->first();
-
-                //         if (!empty($product)) {
-                //             $updated = Product::where('style_number', $item['style_number'])
-                //                 ->update([
-                //                     'product_id' => $item['product_id'] ?? null,
-                //                     'size_range_id' => $item['size_range_id'] ?? null,
-                //                     'is_product' => $item['is_product'] ?? null,
-                //                     'is_component' => $item['is_component'] ?? null,
-                //                     'price' => $item['price'] ?? null,
-                //                     'description' => $item['description'] ?? null,
-                //                 ]);
-                //             // dd($updated);
-
-                //             $this->getApparelVariants($item);
-                //         }
-                //     }
-                //     Log::info('exist');
-                // }
+               
             }
-            // Log::info("response",$response);
             $pageInfo =  $shopifyresponse['data']['products']['pageInfo'];
             $nextPageCursor = $pageInfo['endCursor'];
             if ($pageInfo['hasNextPage'] == true) {
-                Log::info("has next page");
-                GetShopifyProduct::dispatch((int) $limit, $reverse, $variantCount, $nextPageCursor, $settings);
+                // info("has next page");
+                GetShopifyProducts::dispatch((int) $limit, $reverse, $variantCount, $nextPageCursor, $settings);
             } else {
-                Log::info("shopify product fetch completed");
+                info("shopify product fetch completed");
             }
         }
     }
