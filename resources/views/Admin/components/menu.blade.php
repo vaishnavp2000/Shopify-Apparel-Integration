@@ -54,7 +54,7 @@
                     <span class="nav-link-icon">
                         <i class="bi bi-people"></i>
                     </span>
-                    <span>Users</span>
+                    <span>Products</span>
                 </a>
             </li>
            
