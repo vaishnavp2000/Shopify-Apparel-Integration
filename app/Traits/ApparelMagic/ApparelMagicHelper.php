@@ -4,6 +4,7 @@ namespace App\Traits\ApparelMagic;
 
 use App\Jobs\ApparelMagic\GetApparelMagicCustomers;
 use App\Models\Am_Customer;
+use App\Models\Am_Division;
 use App\Models\Am_Warehouse;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -289,7 +290,7 @@ trait ApparelMagicHelper
         return $response;
 
     }
-    public function getAmCustomer($page_size = 100, $startAfter = null, $settings)
+    public function getApparelCustomer($page_size = 100, $startAfter = null, $settings)
     {
         try {
             $settings = Setting::where('type', 'apparelmagic')->where('status', 1)->get();
@@ -331,7 +332,7 @@ trait ApparelMagicHelper
             Log::error('Exception while fetching customers', ['error' => $e->getMessage()]);
         }
     }
-    public function getAmWarehouses($settings)
+    public function getApparelWarehouses($settings)
     {
         try {
             $this->apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
@@ -360,7 +361,7 @@ trait ApparelMagicHelper
             Log::error('Exception while fetching warehouses', ['error' => $e->getMessage()]);
         }
     }
-    public function getAmDivision($settings)
+    public function getApparelDivision($settings)
     {
         try {
             $this->apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
@@ -372,11 +373,12 @@ trait ApparelMagicHelper
                 'token' => (string) $token,
             ];
             $divisions = $this->apparelMagicApiRequest($baseUrl, $params);
+             Log::info("divisions" . json_encode($divisions));
             if (!empty($divisions['response']) && !isset($divisions['status'])) {
                 $fetchedDivisions = $divisions['response'];
                 Log::info(message: "divisions" . json_encode($fetchedDivisions));
                 foreach ($fetchedDivisions as $division) {
-                    AmDivision::updateOrCreate(
+                    Am_Division::updateOrCreate(
                         ['division_id' => $division['id']],
                         ['name' => $division['name']]
                     );
@@ -384,7 +386,7 @@ trait ApparelMagicHelper
 
             }
             // dd($response);
-            Log::info("divisions" . json_encode($divisions));
+           
         } catch (Exception $e) {
             Log::error('Exception while fetching divisions', ['error' => $e->getMessage()]);
         }

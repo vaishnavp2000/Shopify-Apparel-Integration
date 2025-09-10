@@ -27,7 +27,7 @@ class GetApparelMagicCustomers implements ShouldQueue
     public function handle(): void
     {
     
-        $this->getAmCustomer($this->page_size,$this->startAfter,$this->settings);
+        $this->getApparelCustomer($this->page_size,$this->startAfter,$this->settings);
 
     }
 }

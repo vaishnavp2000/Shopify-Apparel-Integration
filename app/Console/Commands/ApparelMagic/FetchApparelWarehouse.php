@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands\ApparelMagic;
 
+use App\Jobs\ApparelMagic\GetApparelMagicWarehouses;
+use App\Models\Setting;
 use Illuminate\Console\Command;
 
 class FetchApparelWarehouse extends Command
@@ -25,6 +27,8 @@ class FetchApparelWarehouse extends Command
      */
     public function handle()
     {
-        //
+        $settings=Setting::where('type','apparelmagic')->where('status',1)->get();
+        GetApparelMagicWarehouses::dispatch($settings);
+
     }
 }

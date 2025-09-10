@@ -24,6 +24,6 @@ class GetApparelMagicDivisions implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->getAmDivision($this->settings);
+        $this->getApparelDivision($this->settings);
     }
 }

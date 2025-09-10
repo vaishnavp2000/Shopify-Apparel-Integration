@@ -2,12 +2,13 @@
 
 namespace App\Jobs\ApparelMagic;
 
+use App\Traits\ApparelMagic\ApparelMagicHelper;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 class GetApparelMagicWarehouses implements ShouldQueue
 {
-    use Queueable;
+    use Queueable,ApparelMagicHelper;
     protected $settings;
     /**
      * Create a new job instance.
@@ -22,6 +23,6 @@ class GetApparelMagicWarehouses implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->getAmWarehouses($this->settings);
+        $this->getApparelWarehouses($this->settings);
     }
 }
