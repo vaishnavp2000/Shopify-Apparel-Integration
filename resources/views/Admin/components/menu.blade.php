@@ -50,23 +50,25 @@
             </li>
          
             <li>
-                <a href="">
+               <a href="{{route('admin.product.index')}}" @if (request()->fullUrl() ==
+                    route('admin.product.index')) class="active" @endif>
                     <span class="nav-link-icon">
-                        <i class="bi bi-people"></i>
+                        <i class="bi bi-bag"></i>
                     </span>
                     <span>Products</span>
+
                 </a>
             </li>
            
 
-            <li>
+            <!-- <li>
                 <a href="">
                     <span class="nav-link-icon">
                     <i class="bi bi-sliders" aria-hidden="true"></i>
                     </span>
                     <span>Systems</span>
                 </a>
-            </li>
+            </li> -->
 
         </ul>
     </div>
