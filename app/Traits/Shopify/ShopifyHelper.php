@@ -338,6 +338,7 @@ trait ShopifyHelper
                         [
                             'shopify_order_id' => str_replace('gid://shopify/Order/', '', $shopifyOrder['id']),
                             'shopify_title' => $lineItem['title'] ?? null,
+                            'shopify_order_name'=>$shopifyOrder['name'],
                             'shopify_sku' => $lineItem['sku'] ?? null,
                             'shopify_quantity' => $lineItemNode['totalQuantity'] ?? 0,
                             'shopify_current_quantity' => $lineItemNode['remainingQuantity'] ?? 0,

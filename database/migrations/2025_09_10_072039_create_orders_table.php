@@ -41,7 +41,6 @@ return new class extends Migration
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->string('fulfillment_status')->nullable();
             $table->decimal('balance', 10, 2)->default(0);
-            // $table->string('pick_ticket_id')->nullable();
             $table->boolean('allocated')->default(0);
             $table->string('shopify_order_id')->nullable();
             $table->string('shopify_customer_id')->nullable();

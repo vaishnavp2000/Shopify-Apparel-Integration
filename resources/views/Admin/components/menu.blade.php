@@ -59,6 +59,16 @@
 
                 </a>
             </li>
+           <li>
+               <a href="{{route('admin.order.index')}}" @if (request()->fullUrl() ==
+                    route('admin.order.index')) class="active" @endif>
+                    <span class="nav-link-icon">
+                        <i class="bi bi-cart"></i>
+                    </span>
+                    <span>Orders</span>
+
+                </a>
+            </li>
            
 
             <!-- <li>

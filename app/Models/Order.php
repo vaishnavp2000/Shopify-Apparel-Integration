@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
    protected $fillable=[
-     'order_id',
+        'order_id',
         'warehouse_id',
         'customer_id',
         'division_id',
@@ -55,4 +55,8 @@ class Order extends Model
         'shopify_created_at',
         'shopify_fulfillment_status'
    ];
+    public function orderProducts()
+    {
+        return $this->hasMany(OrderProduct::class, 'shopify_order_id','shopify_order_id');
+    }
 }

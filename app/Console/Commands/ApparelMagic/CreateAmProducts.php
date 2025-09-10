@@ -32,7 +32,7 @@ class CreateAmProducts extends Command
      * Execute the console command.
      */
     public function handle()
-{
+    {
     $productId = $this->option('productId');
     
     if ($productId) {

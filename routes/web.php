@@ -17,6 +17,10 @@ Route::prefix('admin')->name('admin.')->namespace('App\Http\Controllers\Admin')-
         Route::resource('product', App\Http\Controllers\Admin\ProductController::class);
         Route::post('fetch-product', [App\Http\Controllers\Admin\ProductController::class, 'fetchProducts'])->name('fetch-product');
         Route::post('create-am-products', [App\Http\Controllers\Admin\ProductController::class, 'createAmProducts'])->name('create-am-products');
+        Route::resource('order', App\Http\Controllers\Admin\OrderController::class);
+        Route::post('fetch-orders', [App\Http\Controllers\Admin\OrderController::class, 'fetchOrders'])->name('fetch-orders');
+
+
 
     
     });

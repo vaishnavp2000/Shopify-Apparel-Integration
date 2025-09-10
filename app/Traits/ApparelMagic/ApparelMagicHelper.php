@@ -6,11 +6,14 @@ use App\Jobs\ApparelMagic\GetApparelMagicCustomers;
 use App\Models\Am_Customer;
 use App\Models\Am_Division;
 use App\Models\Am_Warehouse;
+use App\Models\Order;
+use App\Models\OrderProduct;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Setting;
 use App\Models\SizeRange;
 use App\Traits\ApiHelper;
+use DateTime;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -389,6 +392,148 @@ trait ApparelMagicHelper
            
         } catch (Exception $e) {
             Log::error('Exception while fetching divisions', ['error' => $e->getMessage()]);
+        }
+    }
+
+     public function createApparelmagicOrder($order)
+    {
+        // info("order".json_encode(explode('T', $order['shopify_created_at'])));
+        try {
+            $settings = Setting::where('type', 'apparelmagic')->where('status', 1)->get();
+            // info("settings".json_encode($settings));
+            $this->apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+            $baseUrl = $this->apparelUrl . '/orders';
+            $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+            //  info("token".json_encode($token));
+            $time = time();
+
+            $division_id =1016;
+            $warehouse_id = 1006;
+            $customer_id = 1000;
+
+            $header = [];
+            $header['customer_id'] = $customer_id;
+            $header['division_id'] = $division_id;
+            $header['ar_acct'] = '1000';
+            $header['warehouse_id'] = $warehouse_id;
+            $header['currency_id'] = '1000';
+
+            $datecreated = explode('T', $order->shopify_created_at);
+            $formateddate = DateTime::createFromFormat('Y-m-d', $datecreated[0]);
+            $datecreated = $formateddate->format('m/d/Y');
+            $header['date'] = $datecreated;
+            $header['date_start'] = $datecreated;
+
+            $header['source'] = 'Shopify Wholesale';
+            $header['notes'] = $order->shopify_shipping_notes;
+            $header['amount'] = (float) $order->shopify_shipping_total;
+            $header['name'] = $order->shopify_customer_firstname . ' ' . $order->shopify_customer_lastname;
+
+            $header['address_1'] = $order->shopify_shipping_address1;
+            $header['address_2'] = $order->shopify_shipping_address2 ?? '';
+            $header['city'] = $order->shopify_shipping_city;
+            $header['postal_code'] = $order->shopify_shipping_zip;
+            $header['country'] = $order->shopify_shipping_country;
+            $header['state'] = $order->shopify_shipping_provincecode;
+            $header['phone'] = $order->shopify_shipping_phone;
+            $header['email'] = $order->shopify_email;
+            
+            $items = [];
+            $orderItems = $order->orderProducts;
+            
+            // info("orderItems".json_encode($orderItems));
+
+           foreach ($orderItems as $orderProduct) {
+            // info("orderProducts".json_encode($orderProduct));
+
+               $variant = ProductVariant::where('shopify_sku', $orderProduct->shopify_sku)
+                    ->whereNotNull('product_id')
+                    ->first();
+                
+
+                    // info("unit_price".json_encode($order->shopify_shipping_total));
+                    // info("qty".json_encode($order->shopify_shipping_total));
+
+                    $items[] = [
+                        'sku_id'    =>  $variant->sku_id ?? '',
+                        'qty'       => (string) $orderProduct->shopify_quantity,
+                        'unit_price'=> (string) $order->shopify_shipping_total,
+                        'amount'    => (string) ($orderProduct->shopify_quantity * $order->shopify_shipping_total),
+                    
+                    ];
+            }
+            $params = [
+                'time'   => (string) $time,
+                'token'  => (string) $token,
+                'header' => $header,
+                'items'  => $items,
+            ];
+
+            $response = $this->apparelMagicApiPostRequest($baseUrl, $params);
+            info("Order-CREATED".json_encode($response));
+
+            if (!empty($response) && !isset($response['status'])) {
+                $amOrders = $response['response'];
+                info("am order response".json_encode($amOrders));
+
+                foreach ($amOrders as $order) {
+                    $orderDetail = Order::updateOrCreate(
+                        ['order_id' => $order['order_id']],
+                    
+                        [
+                            'customer_id'   => $order['customer_id'] ?? null,
+                            'division_id'   => $order['division_id'] ?? null,
+                            'warehouse_id'  => $order['warehouse_id'] ?? null,
+                            'currency_id'   => $order['currency_id'] ?? null,
+                            'arr_acct'      => $order['ar_acct'] ?? null,
+                            'date'          => $order['date'] ?? null,
+                            'date_start'    => $order['date_start'] ?? null,
+                            'source'        => $order['source'] ?? null,
+                            'notes'         => $order['notes'] ?? null,
+                            'name'          => $order['name'] ?? null,
+                            'address_1'     => $order['address_1'] ?? null,
+                            'address_2'     => $order['address_2'] ?? null,
+                            'city'          => $order['city'] ?? null,
+                            'postal_code'   => $order['postal_code'] ?? null,
+                            'country'       => $order['country'] ?? null,
+                            'state'         => $order['state'] ?? null,
+                            'phone'         => $order['phone'] ?? null,
+                            'email'         => $order['email'] ?? null,
+                            'created_at'    => $order['creation_time'] ?? '',
+                        ]
+                    );
+
+                    if (!empty($order['order_items']) && is_array($order['order_items'])) {
+                        Log::info("Order items");
+                        foreach ($order['order_items'] as $item) {
+                            // info("Order Items Loop".json_encode($item));
+                            OrderProduct::updateOrCreate(
+                                [
+                                    'order_id' => $orderDetail->id,
+                                    'sku_id'   => $item['sku_id'],
+                                ],
+                                [
+                                    'product_id'     => $item['product_id'] ?? null,
+                                    'sku_alt'        => $item['sku_alt'] ?? null,
+                                    'upc'            => $item['upc'] ?? null,
+                                    'style_number'   => $item['style_number'] ?? null,
+                                    'description'    => $item['description'] ?? null,
+                                    'size'           => $item['size'] ?? null,
+                                    'qty'            => $item['qty'] ?? 0,
+                                    'unit_price'     => $item['unit_price'] ?? 0,
+                                    'amount'         => $item['amount'] ?? 0,
+                                    'is_taxable'     => $item['is_taxable'] ?? '0',
+                                    'warehouse_id'   => $item['warehouse_id'] ?? $order['warehouse_id'] ?? null,
+                                    
+                                ]
+                            );
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception $e) {
+            Log::error('Exception while creating order', ['error' => $e->getMessage()]);
         }
     }
 
