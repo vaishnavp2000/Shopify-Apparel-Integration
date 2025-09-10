@@ -13,13 +13,12 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-             $table->string('order_id')->nullable();
+            $table->string('order_id')->nullable();
             $table->unsignedBigInteger('warehouse_id')->nullable();
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->unsignedBigInteger('division_id')->nullable();
             $table->string('arr_accnt')->nullable();
             $table->unsignedBigInteger('currency_id')->nullable();
-            $table->string('shopify_order_name')->nullable();
             $table->date('date')->nullable();
             $table->date('date_start')->nullable();
             $table->string('notes')->nullable();
@@ -42,11 +41,12 @@ return new class extends Migration
             $table->decimal('amount_paid', 10, 2)->default(0);
             $table->string('fulfillment_status')->nullable();
             $table->decimal('balance', 10, 2)->default(0);
-            $table->string('pick_ticket_id')->nullable();
+            // $table->string('pick_ticket_id')->nullable();
             $table->boolean('allocated')->default(0);
             $table->string('shopify_order_id')->nullable();
-            $table->string('shopify_email')->nullable();
             $table->string('shopify_customer_id')->nullable();
+            $table->string('shopify_order_name')->nullable();
+            $table->string('shopify_email')->nullable();
             $table->string('shopify_customer_firstname')->nullable();
             $table->string('shopify_customer_lastname')->nullable();
             $table->string('shopify_shipping_address1')->nullable();
@@ -56,9 +56,10 @@ return new class extends Migration
             $table->string('shopify_shipping_country')->nullable();
             $table->string('shopify_shipping_provincecode')->nullable();
             $table->string('shopify_shipping_phone')->nullable();
+            $table->string('shopify_fulfillment_status')->nullable();
             $table->string('shopify_shipping_notes')->nullable();
             $table->string('shopify_shipping_total')->nullable();
-            $table->date('shopify_created_at')->nullable();
+            $table->string('shopify_created_at')->nullable();
             $table->timestamps();
         });
     }
