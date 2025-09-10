@@ -66,6 +66,22 @@ trait ApiHelper
             return ['status' => 'failure', 'statusCode' => $e->getCode(), 'message' => $e->getMessage()];
         }
     }
+     public function apparelMagicApiPutRequest($url, $params)
+    {
+        try {
+            $response = Http::acceptJson()
+                ->put($url, $params)
+                ->throw();
+
+            return $response->json();
+        } catch (HttpClientException $e) {
+            return ['status' => 'failure','statusCode' => $e->getCode(),'message' => $e->getMessage()];
+        } catch (ConnectionException $e) {
+            return ['status' => 'failure','statusCode' => $e->getCode(),'message' => $e->getMessage()];
+        } catch (RequestException $e) {
+            return ['status' => 'failure','statusCode' => $e->getCode(),'message' => $e->getMessage()];
+        }
+    }
 
 
 

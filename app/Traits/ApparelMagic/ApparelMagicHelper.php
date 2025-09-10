@@ -29,7 +29,7 @@ trait ApparelMagicHelper
         ];
 
         $header = [];
-        $header['style_number'] =$product->shopify_product_id;
+        $header['style_number'] =$product->shopify_handle;
         $header['description'] =$product->description;   
         $header['is_product'] = 1;
         $header['is_component'] = 0;
@@ -61,8 +61,8 @@ trait ApparelMagicHelper
 
         if (!empty($amProducts)) {
             foreach ($amProducts as $item) {
-                $product = Product::where('style_number', $item['style_number'] ?? '')->first();
-                info("product table Creats starts".json_encode($product));
+                 $product = Product::where('style_number', $item['style_number'] ?? '')->first();
+                // info("product table Creats starts".json_encode($product));
                 if (!empty($product)) {
                 info("product table Creats starts2".json_encode($product));
 
@@ -85,7 +85,7 @@ trait ApparelMagicHelper
         }
       }
     }
-     public function getApparelVariants($item)
+      public function getApparelVariants($item)
     {
         // dd($item);
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
@@ -136,6 +136,7 @@ trait ApparelMagicHelper
         }
       
     }
+
      public function fetchApparelmagicInventory($settings, $sku_id)
     {
         $settings = Setting::where('type', 'apparelmagic')->where('status', 1)->get();
@@ -184,9 +185,7 @@ trait ApparelMagicHelper
                     );
                 }
             }
-
-
-            }
+         }
         }
     }
      public function apparelSizeRanges()
@@ -262,7 +261,7 @@ trait ApparelMagicHelper
             info("Matching IDs: " . json_encode($matchingIds));
         return $matchingIds;
     }
-       public function getProductByProductId($styleNumber){
+       public function getProductByStyleNumber($styleNumber){
          $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
          $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
          $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
@@ -281,7 +280,6 @@ trait ApparelMagicHelper
                 ]
                 ];
             $response=$this->apparelMagicApiRequest($url,$params);
-            // info("response".json_encode($response));
             return $response;
 
     }
