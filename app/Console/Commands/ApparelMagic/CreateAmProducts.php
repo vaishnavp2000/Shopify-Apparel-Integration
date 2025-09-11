@@ -36,7 +36,6 @@ class CreateAmProducts extends Command
     $productId = $this->option('productId');
     
     if ($productId) {
-        // Process single product
         $product = Product::where('shopify_product_id', $productId)->first();
 
         if (!$product) {
@@ -47,9 +46,9 @@ class CreateAmProducts extends Command
         $productVariant = ProductVariant::where('shopify_product_id', $product->shopify_product_id)
                             ->select('color', 'size')
                             ->get();
-        $productVariants = $productVariant->toArray();
-         $styleNumber = $product->shopify_handle;
-        $response = $this->getProductByStyleNumber($styleNumber);
+            $productVariants = $productVariant->toArray();
+            $styleNumber = $product->shopify_handle;
+            $response = $this->getProductByStyleNumber($styleNumber);
 
         if (empty($response['response'])) {
             $this->info("create option product id");

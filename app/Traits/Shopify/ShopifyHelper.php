@@ -279,7 +279,7 @@ trait ShopifyHelper
 
             $variables = ['limit' => $limit, 'reverse' => $reverse, 'nextPageCursor' => $nextPageCursor];
             $response = $this->getHttp($queryString, $variables);
-            // info("response".json_encode($response));
+            info("response".json_encode($response));
              
                 foreach ($response['data']['orders']['edges'] as $edge) {
                     // Log::info("edge".json_encode($edge));

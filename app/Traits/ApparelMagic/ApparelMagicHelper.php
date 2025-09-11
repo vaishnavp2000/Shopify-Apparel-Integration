@@ -14,6 +14,7 @@ use App\Models\Setting;
 use App\Models\SizeRange;
 use App\Traits\ApiHelper;
 use DateTime;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -120,9 +121,8 @@ trait ApparelMagicHelper
             $inventoryItems = $inventory['response'];
             info("inventory response" . json_encode($inventoryItems));
             foreach ($inventoryItems as $variantData) {
-                ProductVariant::updateOrCreate(
+              ProductVariant::updateOrCreate(
                     [
-                        'style_number' => $variantData['style_number'] ?? null,
                         'color' => !empty($variantData['attr_2']) ? $variantData['attr_2'] : 'MALTESE',
                         'size' => $variantData['size'] ?? null,
                     ],
@@ -134,13 +134,12 @@ trait ApparelMagicHelper
                         'upc_display' => $variantData['upc_display'] ?? null,
                     ]
                 );
-                // info(json_encode($productVariant));
-                $sku_id = $variantData['sku_id'] ?? null;
-                $sku_alt = $variantData['sku_alt'] ?? null;
-                $upc_display = $variantData['upc_display'] ?? null;
-                if ($sku_id && (empty($sku_alt) || empty($upc_display))) {
-                    $this->fetchApparelmagicInventory($settings, $sku_id);
-                }
+                    $sku_id = $variantData['sku_id'] ?? null;
+                    $sku_alt = $variantData['sku_alt'] ?? null;
+                    $upc_display = $variantData['upc_display'] ?? null;
+                    if ($sku_id && (empty($sku_alt) || empty($upc_display))) {
+                        $this->fetchApparelmagicInventory($settings, $sku_id);
+                    }
             }
         }
 
@@ -427,6 +426,7 @@ trait ApparelMagicHelper
             $header['source'] = 'Shopify Wholesale';
             $header['notes'] = $order->shopify_shipping_notes;
             $header['amount'] = (float) $order->shopify_shipping_total;
+            $header['customer_po'] = (float) $order->shopify_order_id;
             $header['name'] = $order->shopify_customer_firstname . ' ' . $order->shopify_customer_lastname;
 
             $header['address_1'] = $order->shopify_shipping_address1;
@@ -438,30 +438,30 @@ trait ApparelMagicHelper
             $header['phone'] = $order->shopify_shipping_phone;
             $header['email'] = $order->shopify_email;
             
-            $items = [];
-            $orderItems = $order->orderProducts;
-            
-            // info("orderItems".json_encode($orderItems));
+          $items = [];
+        $orderItems = $order->orderProducts; 
 
-           foreach ($orderItems as $orderProduct) {
-            // info("orderProducts".json_encode($orderProduct));
+        foreach ($orderItems as $orderProduct) {
+            info("orderProductquanity".json_encode($orderProduct->shopify_quantity));
 
-               $variant = ProductVariant::where('shopify_sku', $orderProduct->shopify_sku)
-                    ->whereNotNull('product_id')
-                    ->first();
-                
+            $variant = ProductVariant::where('shopify_sku', $orderProduct->shopify_sku)
+                        ->whereNotNull('product_id')
+                        ->first();
 
-                    // info("unit_price".json_encode($order->shopify_shipping_total));
-                    // info("qty".json_encode($order->shopify_shipping_total));
-
-                    $items[] = [
-                        'sku_id'    =>  $variant->sku_id ?? '',
-                        'qty'       => (string) $orderProduct->shopify_quantity,
-                        'unit_price'=> (string) $order->shopify_shipping_total,
-                        'amount'    => (string) ($orderProduct->shopify_quantity * $order->shopify_shipping_total),
-                    
-                    ];
+            if (!$variant) {
+                continue; 
             }
+
+            $quantity = $orderProduct->shopify_quantity; 
+            $items[] = [
+                'sku_id'    => $variant->sku_id,
+                'qty'       => (string) $quantity,
+                'unit_price'=> (string) ($order->shopify_shipping_total ?? 0),
+                'amount'    => (string) ($quantity * ($order->shopify_shipping_total ?? 0)),
+            ];
+        }
+
+
             $params = [
                 'time'   => (string) $time,
                 'token'  => (string) $token,
@@ -478,19 +478,21 @@ trait ApparelMagicHelper
 
                 foreach ($amOrders as $order) {
                     $orderDetail = Order::updateOrCreate(
-                        ['order_id' => $order['order_id']],
+                        ['shopify_order_id' => $order['customer_po']],
                     
                         [
+                            'order_id'=>$order['order_id']??null,
                             'customer_id'   => $order['customer_id'] ?? null,
                             'division_id'   => $order['division_id'] ?? null,
                             'warehouse_id'  => $order['warehouse_id'] ?? null,
                             'currency_id'   => $order['currency_id'] ?? null,
-                            'arr_acct'      => $order['ar_acct'] ?? null,
-                            'date'          => $order['date'] ?? null,
-                            'date_start'    => $order['date_start'] ?? null,
+                            'arr_accnt'      => $order['ar_acct'] ?? null,
+                            'date'          => isset($order['date']) ? Carbon::parse($order['date'])->format('Y-m-d') : null,
+                            'date_start'    => isset($order['date_start']) ?Carbon::parse($order['date_start'])->format('Y-m-d') : null,
                             'source'        => $order['source'] ?? null,
                             'notes'         => $order['notes'] ?? null,
-                            'name'          => $order['name'] ?? null,
+                            'customer_name'  => $order['name'] ?? null,
+                            'customer_po'=> $order['customer_po']??null,
                             'address_1'     => $order['address_1'] ?? null,
                             'address_2'     => $order['address_2'] ?? null,
                             'city'          => $order['city'] ?? null,
@@ -500,34 +502,39 @@ trait ApparelMagicHelper
                             'phone'         => $order['phone'] ?? null,
                             'email'         => $order['email'] ?? null,
                             'created_at'    => $order['creation_time'] ?? '',
+                            'credit_status'=>$order['credit_status']??null,
+                        'fulfillment_status'=>$order['fulfillment_status'] ?? null
+
                         ]
                     );
 
                     if (!empty($order['order_items']) && is_array($order['order_items'])) {
                         Log::info("Order items");
                         foreach ($order['order_items'] as $item) {
-                            // info("Order Items Loop".json_encode($item));
-                            OrderProduct::updateOrCreate(
-                                [
-                                    'order_id' => $orderDetail->id,
-                                    'sku_id'   => $item['sku_id'],
+                                $orderDetail->orderProducts()->updateOrCreate(
+                                    [
+                                    'shopify_sku'=>$item['sku_alt'],
                                 ],
-                                [
-                                    'product_id'     => $item['product_id'] ?? null,
-                                    'sku_alt'        => $item['sku_alt'] ?? null,
-                                    'upc'            => $item['upc'] ?? null,
-                                    'style_number'   => $item['style_number'] ?? null,
-                                    'description'    => $item['description'] ?? null,
-                                    'size'           => $item['size'] ?? null,
-                                    'qty'            => $item['qty'] ?? 0,
-                                    'unit_price'     => $item['unit_price'] ?? 0,
-                                    'amount'         => $item['amount'] ?? 0,
-                                    'is_taxable'     => $item['is_taxable'] ?? '0',
-                                    'warehouse_id'   => $item['warehouse_id'] ?? $order['warehouse_id'] ?? null,
-                                    
-                                ]
-                            );
-                        }
+                                    [
+                                        'order_id'=> $item['order_id'] ?? null,
+                                        'sku_id' => $item['sku_id']??null,
+                                        'product_id'   => $item['product_id'] ?? null,
+                                        'sku_alt'      => $item['sku_alt'] ?? null,
+                                        'upc'          => $item['upc'] ?? null,
+                                        'style_number' => $item['style_number'] ?? null,
+                                        'description'  => $item['description'] ?? null,
+                                        'size'         => $item['size'] ?? null,
+                                        'qty'          => $item['qty'] ?? 0,
+                                        'qty_picked'=>$item['qty_picked']??0,
+                                        'qty_cancelled'=>$item['qty_cxl']??0, 
+                                        'qty_shipped'=>$item['qty_shipped']??0,
+                                        'unit_price'   => $item['unit_price'] ?? 0,
+                                        'amount'       => $item['amount'] ?? 0,
+                                        'is_taxable'   => $item['is_taxable'] ?? '0',
+                                        'warehouse_id' => $item['warehouse_id'] ?? $order['warehouse_id'] ?? null,
+                                    ]
+                                );
+                            }
                     }
                 }
             }
@@ -535,6 +542,30 @@ trait ApparelMagicHelper
         } catch (Exception $e) {
             Log::error('Exception while creating order', ['error' => $e->getMessage()]);
         }
+    }
+    public function getApparelOrder($orderId){
+        // info("orderid".json_encode($orderId));
+        $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+        $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+        $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+        $time = time();
+        $url = $apparelUrl . '/orders';
+        $params = [
+            'time' => (string) $time,
+            'token' => (string) $token,
+            'parameters' => [
+                [
+                    'field' => 'customer_po',
+                    'value' => $orderId,
+                    'operator' => '=',
+                    'include_type' => 'AND'
+                ],
+            ]
+        ];
+        $response = $this->apparelMagicApiRequest($url, $params);
+        return $response;
+
+
     }
 
 }

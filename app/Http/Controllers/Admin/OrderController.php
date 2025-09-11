@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ApparelMagic\CreateApparelOrders;
 use App\Jobs\Shopify\GetShopifyOrders;
 use App\Models\Order;
 use App\Models\Setting;
@@ -54,16 +55,14 @@ class OrderController extends Controller
     public function createAmOrders(Request $request)
     {
     $orderId = $request->order_id;
+    dd()
     $sync_all = $request->sync_all;
 
     if ($orderId) {
-        // Sync specific order
-        Artisan::call('app:create-am-orders', [
+       Artisan::call('app:create-am-products', [
             '--orderId' => $orderId
         ]);
     }
-
-    // Sync all orders
     if ($sync_all == 1) {
         $orders = Order::whereNotNull('shopify_order_id')->get();
 
