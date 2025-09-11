@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Configuration;
+use App\Models\Order;
+use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,8 +22,11 @@ class HomeController extends Controller
     }
     public function index(Request $request)
     {
-       
-
-        return view('admin.home');
+       $productCount=Product::count();
+       $orderCount=Order::count();
+       return view('admin.home', [
+            'productCount' => $productCount,
+            'orderCount' => $orderCount
+        ]);
     }
 }

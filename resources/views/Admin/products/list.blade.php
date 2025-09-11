@@ -55,7 +55,7 @@
                                 <i class="bi bi-arrow-repeat me-1"></i>Fetch Shopify Products
                             </button>
                              <button class="btn btn-primary btn-icon" id="sync_am_product" data-bs-toggle="modal" data-bs-target="#syncAmProductModal">
-                                <i class="bi bi-plus-circle me-1"></i>Sync Am Product
+                                <i class="bi bi-plus-circle me-1"></i>Create Am Products
                             </button>
                         </div>
                       
@@ -90,7 +90,7 @@
     <div class="modal-content">
       
       <div class="modal-header">
-        <h5 class="modal-title" id="syncAmProductModalLabel">Sync AM Product</h5>
+        <h5 class="modal-title" id="syncAmProductModalLabel">Create AM Product</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 

@@ -55,7 +55,7 @@
                                 <i class="bi bi-arrow-repeat me-1"></i> Fetch Shopify Orders
                             </button>
                               <button class="btn btn-primary btn-icon" id="sync_am_order" data-bs-toggle="modal" data-bs-target="#syncAmOrderModal">
-                                <i class="bi bi-plus-circle me-1"></i>Sync Am Order
+                                <i class="bi bi-plus-circle me-1"></i>Create Am Order
                             </button>
                             </a>
                         </div>
@@ -100,7 +100,7 @@
         <form id="syncAmOrderForm">
           <div class="mb-3">
             <label for="shopify_order_id" class="form-label">Shopify Order ID</label>
-            <input type="text" class="form-control" id="shopify_order_id" name="shopify_product_id" placeholder="Enter Shopify Order ID">
+            <input type="text" class="form-control" id="shopify_order_id" name="shopify_order_id" placeholder="Enter Shopify Order ID">
             <div class="form-text">Leave blank if you want to sync all orders.</div>
           </div>
 
@@ -214,8 +214,10 @@ $('#pageLength').on('change', function () {
     });
 });
 $(document).on('click', '#syncAmProductSubmit', function () {
+    // console.log("sync logoooooo");
     var btn = $(this);
     var orderId = $('#shopify_order_id').val(); 
+    console.log("orderId",orderId);
     var syncAll = $('#sync_all').is(':checked') ? 1 : 0;
 
     $.ajax({

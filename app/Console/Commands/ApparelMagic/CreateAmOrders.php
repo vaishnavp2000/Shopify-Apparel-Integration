@@ -39,12 +39,9 @@ class CreateAmOrders extends Command
         if ($order) {
             $orderId = $order->shopify_order_id;
             $response = $this->getApparelOrder($orderId);
-            // dd($response);
             if (empty($response['response'])) {
-                // $this->info("order created");
                 $this->createApparelmagicOrder($order);
             } else {
-                // $this->info("order updated");
             $item = $response['response'][0];
 
             $date = isset($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null;
@@ -113,7 +110,7 @@ class CreateAmOrders extends Command
     foreach ($orders as $order) {
         $response = $this->getApparelOrder($order->shopify_order_id);
 
-        if (empty($response)) {
+        if (empty($response['response'])) {
             $this->createApparelmagicOrder($order);
         } else {
             $item = $response['response'][0];

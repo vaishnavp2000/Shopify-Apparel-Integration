@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('page-title', 'Shopify_Apparel_Order_App')
+@section('page-title', 'Shopify_Apparel')
 
 @section('head')
 <link rel="stylesheet" href="{{ url('libs/dataTable/datatables.min.css') }}" type="text/css">
@@ -29,10 +29,10 @@
                         <div class="card border-0">
                             <div class="card-body text-center">
                                 <div class="display-5">
-                                    <i class="bi bi-trophy"></i>
+                                    <i class="bi bi-bag"></i>
                                 </div>
                                 <h5 class="my-3">Products</h5>
-                                <div class="text-muted"></div>
+                                <div class="text-muted">{{ $productCount }}</div>
                             </div>
                         </div>
                 </div>
@@ -41,10 +41,10 @@
                         <div class="card border-0">
                             <div class="card-body text-center">
                                 <div class="display-5">
-                                    <i class="bi bi-globe"></i>
+                                    <i class="bi bi-cart"></i>
                                 </div>
                                 <h5 class="my-3">Orders</h5>
-                                <div class="text-muted"></div>
+                                <div class="text-muted">{{$orderCount }}</div>
                             </div>
                         </div>
                        
