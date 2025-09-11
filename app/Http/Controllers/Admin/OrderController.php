@@ -55,7 +55,6 @@ class OrderController extends Controller
     public function createAmOrders(Request $request)
     {
     $orderId = $request->order_id;
-    dd()
     $sync_all = $request->sync_all;
 
     if ($orderId) {
