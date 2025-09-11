@@ -1,6 +1,6 @@
 @extends('admin.layouts.app')
 
-@section('page-title', 'Microsite')
+@section('page-title', 'Shopify_Apparel_Order_App')
 
 @section('head')
 <link rel="stylesheet" href="{{ url('libs/dataTable/datatables.min.css') }}" type="text/css">
@@ -31,7 +31,7 @@
                                 <div class="display-5">
                                     <i class="bi bi-trophy"></i>
                                 </div>
-                                <h5 class="my-3">USERS</h5>
+                                <h5 class="my-3">Products</h5>
                                 <div class="text-muted"></div>
                             </div>
                         </div>
@@ -43,7 +43,7 @@
                                 <div class="display-5">
                                     <i class="bi bi-globe"></i>
                                 </div>
-                                <h5 class="my-3">DEMO</h5>
+                                <h5 class="my-3">Orders</h5>
                                 <div class="text-muted"></div>
                             </div>
                         </div>

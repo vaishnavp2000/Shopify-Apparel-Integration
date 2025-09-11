@@ -54,8 +54,12 @@
                             <button class="btn btn-primary btn-icon" id="fetch_orders_btn">
                                 <i class="bi bi-arrow-repeat me-1"></i> Fetch Shopify Orders
                             </button>
+                              <button class="btn btn-primary btn-icon" id="sync_am_order" data-bs-toggle="modal" data-bs-target="#syncAmOrderModal">
+                                <i class="bi bi-plus-circle me-1"></i>Sync Am Order
+                            </button>
                             </a>
                         </div>
+                       
 
                     </div>
                 </div>
@@ -64,12 +68,17 @@
                 <table class="table table-custom table-lg mb-0" id="ordertb">
                    <thead>
                         <tr>
-                            <th>Order ID</th>
-                            <th>Shopify Order ID</th>
-                            <th>Product ID</th>
-                            <th>Style Number</th>
-                            <th>Description</th>
-                            <th>Amount</th>
+                          <th>Order ID</th>
+                        <th>Shopify Order ID</th>
+                        <th>Customer Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Amount</th>
+                        <th>Fulfillment Status</th>
+                        <th>Date</th>
+                        <th>Country</th>
+                        <th>State</th>
+                        <th>Balance</th>
                             
                         </tr>
                     </thead>
@@ -77,6 +86,44 @@
             </div>
         </div>
     </div>
+</div>
+ <div class="modal fade" id="syncAmOrderModal" tabindex="-1" aria-labelledby="syncAmOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h5 class="modal-title" id="syncAmOrderModalLabel">Sync AM Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="syncAmOrderForm">
+          <div class="mb-3">
+            <label for="shopify_order_id" class="form-label">Shopify Order ID</label>
+            <input type="text" class="form-control" id="shopify_order_id" name="shopify_product_id" placeholder="Enter Shopify Order ID">
+            <div class="form-text">Leave blank if you want to sync all orders.</div>
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="1" id="sync_all" name="sync_all">
+            <label class="form-check-label" for="sync_all">
+              Sync all order
+            </label>
+          </div>
+        </form>
+      </div>
+
+        <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        
+        <button type="button" class="btn btn-primary" id="syncAmProductSubmit">
+            <span class="btn-text">Sync</span>
+            <span class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true"></span>
+        </button>
+        </div>
+
+    </div>
+  </div>
 </div>
 
 @endsection
@@ -96,14 +143,19 @@ var $ordertable = $('#ordertb').DataTable({
             
         }
     },
-    columns: [
-        { data: 'order_id', name: 'order_id' },
-        { data: 'shopify_order_id', name: 'shopify_order_id' },
-        { data: 'product_id', name: 'product_id' },
-        { data: 'style_number', name: 'style_number' },
-        { data: 'description', name: 'description' },
-        { data: 'amount', name: 'amount' },
-    ],
+   columns: [
+    { data: 'order_id', name: 'order_id' },
+    { data: 'shopify_order_id', name: 'shopify_order_id' },
+    { data: 'customer_name', name: 'customer_name' },
+    { data: 'phone', name: 'phone' },
+    { data: 'email', name: 'email' },
+    { data: 'amount', name: 'amount' },
+    { data: 'fulfillment_status', name: 'fulfillment_status' },
+    { data: 'date', name: 'date' },
+    { data: 'country', name: 'country' },
+    { data: 'state', name: 'state' },
+    { data: 'balance', name: 'balance' }
+],
 
     columnDefs: [{
         defaultContent: '--',
@@ -161,6 +213,50 @@ $('#pageLength').on('change', function () {
         }
     });
 });
+$(document).on('click', '#syncAmProductSubmit', function () {
+    var btn = $(this);
+    var orderId = $('#shopify_order_id').val(); 
+    var syncAll = $('#sync_all').is(':checked') ? 1 : 0;
+
+    $.ajax({
+        url: "{{ route('admin.create-am-orders') }}", 
+        type: 'POST',
+        data: {
+            order_id: orderId,
+            sync_all: syncAll,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        beforeSend: function () {
+            btn.prop("disabled", true);
+            btn.find(".btn-text").text("Syncing...");
+            btn.find(".spinner-border").removeClass("d-none");
+        },
+        success: function (response) {
+            $('#syncAmOrderModal').modal('hide');
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: response.message || 'Orders synced successfully.',
+            });
+        },
+        error: function (xhr) {
+            $('#syncAmOrderModal').modal('hide');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: (xhr.responseJSON && xhr.responseJSON.message) 
+                    ? xhr.responseJSON.message 
+                    : 'Failed to sync orders.',
+            });
+        },
+        complete: function () {
+            btn.prop("disabled", false);
+            btn.find(".btn-text").text("Sync");
+            btn.find(".spinner-border").addClass("d-none");
+        }
+    });
+});
+
 
 });
 

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Configuration;
-use App\Models\MicroSite;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;

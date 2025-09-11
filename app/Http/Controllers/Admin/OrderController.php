@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\Shopify\GetShopifyOrders;
 use App\Models\Order;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -17,13 +18,13 @@ class OrderController extends Controller
      */ public function index(Request $request, Datatables $datatables)
     {
         if ($request->ajax()) {
-            $query = Order::select('order_id','product_id','style_number','amount','shopify_order_id');
+            $query = Order::select('order_id','shopify_order_id','customer_name','phone','email','amount','fulfillment_status','date','country','state','balance');
 
             return DataTables::of($query) 
             ->make(true);
         }
 
-        return view('orders.list');
+        return view('admin.orders.list');
     }
     public function fetchOrders(){
     try {
@@ -40,16 +41,48 @@ class OrderController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Product fetch has been started. You will see updates shortly.'
+            'message' => 'Order fetch has been started. You will see updates shortly.'
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'status' => false,
-            'message' => 'Failed to start product fetch.',
+            'message' => 'Failed to start order fetch.',
             'error'   => $e->getMessage()
         ], 500);
     }
     }
+    public function createAmOrders(Request $request)
+    {
+    $orderId = $request->order_id;
+    $sync_all = $request->sync_all;
+
+    if ($orderId) {
+        // Sync specific order
+        Artisan::call('app:create-am-orders', [
+            '--orderId' => $orderId
+        ]);
+    }
+
+    // Sync all orders
+    if ($sync_all == 1) {
+        $orders = Order::whereNotNull('shopify_order_id')->get();
+
+        foreach ($orders as $order) {
+            $orderProducts = $order->orderProducts()->get();
+            $response = $this->getOrderByShopifyOrderId($order->shopify_order_id);
+
+            if (empty($response['response']) || !is_array($response['response'])) {
+                info("Creating apparel order " . $order->shopify_order_id);
+                CreateApparelOrders::dispatch($order, $orderProducts);
+            } else {
+                info("Order already exists " . $order->shopify_order_id);
+        }
+    }
+
+    return response()->json(['message' => 'Orders sync process initiated']);
+}
+    }
+
 
     /**
      * Show the form for creating a new resource.
