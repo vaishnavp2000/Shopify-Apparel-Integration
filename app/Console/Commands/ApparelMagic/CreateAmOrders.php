@@ -111,7 +111,7 @@ class CreateAmOrders extends Command
         $response = $this->getApparelOrder($order->shopify_order_id);
 
         if (empty($response['response'])) {
-            $this->createApparelmagicOrder($order);
+          CreateApparelOrders::dispatch($order);
         } else {
             $item = $response['response'][0];
             $date = isset($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null;
@@ -149,6 +149,7 @@ class CreateAmOrders extends Command
                         'shopify_sku'=>$orderItem['sku_alt']
                       ],
                         [
+                            'order_id'=>$orderItem['order_id']??null,
                             'product_id'   => $orderItem['product_id'] ?? null,
                             'sku_alt'      => $orderItem['sku_alt'] ?? null,
                             'upc'          => $orderItem['upc'] ?? null,

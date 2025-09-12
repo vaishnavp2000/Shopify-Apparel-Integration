@@ -455,7 +455,7 @@ trait ApparelMagicHelper
             $quantity = $orderProduct->shopify_quantity; 
             $items[] = [
                 'sku_id'    => $variant->sku_id,
-                'qty'       => (string) $quantity,
+                'qty' => (string) (($quantity ?? 0) > 0 ? $quantity : 1),
                 'unit_price'=> (string) ($order->shopify_shipping_total ?? 0),
                 'amount'    => (string) ($quantity * ($order->shopify_shipping_total ?? 0)),
             ];
@@ -503,7 +503,7 @@ trait ApparelMagicHelper
                             'email'         => $order['email'] ?? null,
                             'created_at'    => $order['creation_time'] ?? '',
                             'credit_status'=>$order['credit_status']??null,
-                        'fulfillment_status'=>$order['fulfillment_status'] ?? null
+                            'fulfillment_status'=>$order['fulfillment_status'] ?? null
 
                         ]
                     );
@@ -563,6 +563,7 @@ trait ApparelMagicHelper
             ]
         ];
         $response = $this->apparelMagicApiRequest($url, $params);
+        info("response".json_encode($response));
         return $response;
 
 

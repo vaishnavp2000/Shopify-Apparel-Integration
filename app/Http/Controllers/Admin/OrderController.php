@@ -108,10 +108,12 @@ class OrderController extends Controller
       if (!empty($item['order_items']) && is_array($item['order_items'])) {
         foreach ($item['order_items'] as $orderItem) {
             $orderDetail->orderProducts()->updateOrCreate(
-                ['sku_id' => $orderItem['sku_id'],
-                'shopify_sku'=>$orderItem['sku_alt']
+                [
+                'shopify_order_id'=>$orderDetail->shopify_order_id,
+                'shopify_sku'=>$orderItem['sku_alt'],
             ],
                 [
+                    'sku_id' => $orderItem['sku_id']??null,
                     'product_id'   => $orderItem['product_id'] ?? null,
                     'sku_alt'      => $orderItem['sku_alt'] ?? null,
                     'upc'          => $orderItem['upc'] ?? null,
@@ -150,7 +152,7 @@ class OrderController extends Controller
             $dateStart = isset($item['date_start']) ? Carbon::parse($item['date_start'])->format('Y-m-d') : null;
 
             $orderDetail = Order::updateOrCreate(
-                ['shopify_order_id' => $order->shopify_order_id],
+                ['shopify_order_id' =>$item['customer_po']],
                 [
                     'order_id'      => $item['order_id'] ?? null,
                     'customer_id'   => $item['customer_id'] ?? null,
@@ -181,6 +183,7 @@ class OrderController extends Controller
                         'shopify_sku'=>$orderItem['sku_alt']
                       ],
                         [
+                            'order_id'=>$orderItem['order_id']??null,
                             'product_id'   => $orderItem['product_id'] ?? null,
                             'sku_alt'      => $orderItem['sku_alt'] ?? null,
                             'upc'          => $orderItem['upc'] ?? null,
