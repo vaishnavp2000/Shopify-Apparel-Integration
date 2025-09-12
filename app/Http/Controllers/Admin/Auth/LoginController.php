@@ -69,6 +69,7 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
+        // dd("logout");
         Auth::guard('admin')->logout();
      
         $request->session()->forget('guard_admin'); 
@@ -81,8 +82,9 @@ class LoginController extends Controller
 
         return $request->wantsJson()
             ? new JsonResponse([], 204)
-            : redirect()->route('admin.dashboard');
+            : redirect()->route('admin.login');
     }
+    
 
     // protected function authenticated(Request $request, $user)
     // {
