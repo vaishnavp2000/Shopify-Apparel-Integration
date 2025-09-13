@@ -334,6 +334,9 @@ trait ShopifyHelper
                         [
                              'shopify_order_id' => str_replace('gid://shopify/Order/', '', $shopifyOrder['id']),
                              'shopify_line_item_id' =>str_replace('gid://shopify/LineItem/', '',$lineItem['id']),
+                            'shopify_fulfillment_order_id' =>str_replace('gid://shopify/FulfillmentOrder/', '',$fulfillmentNode['id']) ?? null,
+
+                            
                         ],
                         [
                             'shopify_order_id' => str_replace('gid://shopify/Order/', '', $shopifyOrder['id']),

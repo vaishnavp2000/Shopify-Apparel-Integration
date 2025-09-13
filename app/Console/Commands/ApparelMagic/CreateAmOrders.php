@@ -40,8 +40,11 @@ class CreateAmOrders extends Command
             $orderId = $order->shopify_order_id;
             $response = $this->getApparelOrder($orderId);
             if (empty($response['response'])) {
-                $this->createApparelmagicOrder($order);
+            $this->info("Creating the order");
+            $this->createApparelmagicOrder($order);
             } else {
+            $this->info("updating the order");
+
             $item = $response['response'][0];
 
             $date = isset($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null;
@@ -81,6 +84,7 @@ class CreateAmOrders extends Command
                 'shopify_sku'=>$orderItem['sku_alt']
             ],
                 [
+                    'order_id'=> $item['order_id'] ?? null,
                     'product_id'   => $orderItem['product_id'] ?? null,
                     'sku_alt'      => $orderItem['sku_alt'] ?? null,
                     'upc'          => $orderItem['upc'] ?? null,
@@ -111,8 +115,10 @@ class CreateAmOrders extends Command
         $response = $this->getApparelOrder($order->shopify_order_id);
 
         if (empty($response['response'])) {
+            $this->info("Creating the order");
           CreateApparelOrders::dispatch($order);
         } else {
+            $this->info("updating the order");
             $item = $response['response'][0];
             $date = isset($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null;
             $dateStart = isset($item['date_start']) ? Carbon::parse($item['date_start'])->format('Y-m-d') : null;
@@ -145,11 +151,13 @@ class CreateAmOrders extends Command
             if (!empty($item['order_items']) && is_array($item['order_items'])) {
                 foreach ($item['order_items'] as $orderItem) {
                     $orderDetail->orderProducts()->updateOrCreate(
-                        ['sku_id' => $orderItem['sku_id'],
-                        'shopify_sku'=>$orderItem['sku_alt']
+                        [
+                        'shopify_order_id'=>$orderDetail->id,
+                        'shopify_sku'=>$orderItem['sku_alt'],
                       ],
                         [
                             'order_id'=>$orderItem['order_id']??null,
+                            'sku_id' => $orderItem['sku_id'],
                             'product_id'   => $orderItem['product_id'] ?? null,
                             'sku_alt'      => $orderItem['sku_alt'] ?? null,
                             'upc'          => $orderItem['upc'] ?? null,
