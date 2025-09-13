@@ -457,8 +457,8 @@ trait ApparelMagicHelper
             $items[] = [
                 'sku_id'    => $variant->sku_id,
                 'qty' => (string) (($quantity ?? 0) > 0 ? $quantity : 1),
-                'unit_price'=> (string) ($order->shopify_shipping_total ?? 0),
-                'amount'    => (string) ($quantity * ($order->shopify_shipping_total ?? 0)),
+                'unit_price'=> (string) ($orderProduct->shopify_amount ?? 0),
+                'amount'    => (string) ($quantity * ($orderProduct->shopify_amount ?? 0)),
             ];
         }
 
@@ -471,11 +471,11 @@ trait ApparelMagicHelper
             ];
 
             $response = $this->apparelMagicApiPostRequest($baseUrl, $params);
-            info("Order-CREATED".json_encode($response));
+            // info("Order-CREATED".json_encode($response));
 
             if (!empty($response) && !isset($response['status'])) {
                 $amOrders = $response['response'];
-                info("am order response".json_encode($amOrders));
+                // info("am order response".json_encode($amOrders));
 
                 foreach ($amOrders as $order) {
                     $orderDetail = Order::updateOrCreate(
@@ -513,9 +513,10 @@ trait ApparelMagicHelper
                         Log::info("Order items");
                         foreach ($order['order_items'] as $item) {
                                 $orderDetail->orderProducts()->updateOrCreate(
-                                    [
+                                    ['sku_id' => $item['sku_id'],
                                     'shopify_sku'=>$item['sku_alt'],
-                                ],
+                                    'am_order_id'=>$item['order_id']
+                                    ],
                                     [
                                         'order_id'=>$orderDetail->id,
                                         'am_order_id'=> $item['order_id'] ?? null,
@@ -541,10 +542,22 @@ trait ApparelMagicHelper
                     }
                 }
             }
+             if (!empty($amOrder) && $creditStatus == 'Pending') {
+             }
+          
+
+
+
+            
+
+
 
         } catch (Exception $e) {
             Log::error('Exception while creating order', ['error' => $e->getMessage()]);
         }
+    }
+    public function apparelOrderAllocate(){
+
     }
     public function getApparelOrder($orderId){
         // info("orderid".json_encode($orderId));

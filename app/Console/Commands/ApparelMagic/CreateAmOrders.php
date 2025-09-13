@@ -82,9 +82,9 @@ class CreateAmOrders extends Command
 
             $orderDetail->orderProducts()->updateOrCreate(
                 ['sku_id' => $orderItem['sku_id'],
-                'shopify_sku'=>$orderItem['sku_alt'],
-                'am_order_id'=>$orderItem['order_id']
-            ],
+                                        'shopify_sku'=>$orderItem['sku_alt'],
+                                        'am_order_id'=>$orderItem['order_id']
+                                ],
                 [
                     'order_id'=>$orderDetail->id,
                     'am_order_id'=> $orderItem['order_id'] ?? null,

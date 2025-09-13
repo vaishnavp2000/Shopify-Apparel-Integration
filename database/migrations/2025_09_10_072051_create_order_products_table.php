@@ -34,13 +34,14 @@ return new class extends Migration
             $table->string('shopify_order_id')->nullable();
             $table->string('shopify_order_name')->nullable();
             $table->string('shopify_variant_id')->nullable();
+            $table->string('shopify_fulfillment_order_id')->nullable();
             $table->string('shopify_line_item_id')->nullable();
             $table->string('shopify_sku')->nullable();
             $table->string('shopify_title')->nullable();
             $table->string('shopify_quantity')->nullable();
             $table->string('shopify_current_quantity')->nullable();
             $table->string('shopify_variant_title')->nullable();
-            $table->string('shopify_fulfillment_order_id')->nullable();
+            $table->string('shopify_amount')->nullable();
             $table->timestamps();
         });
     }

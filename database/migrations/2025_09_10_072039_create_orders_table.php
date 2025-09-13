@@ -34,6 +34,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('customer_po')->nullable();
             $table->string('credit_status')->nullable();
+            $table->integer('allocated')->default(0);
             $table->integer('qty')->default(0);
             $table->integer('qty_cancelled')->default(0);
             $table->integer('qty_shipped')->default(0);

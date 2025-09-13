@@ -329,6 +329,7 @@ trait ShopifyHelper
                 foreach ($fulfillmentNode['lineItems']['edges'] as $lineItemEdge) {
                     $lineItemNode = $lineItemEdge['node'];
                     $lineItem = $lineItemNode['lineItem'];
+                    // info("shopify_amount".json_encode($lineItem['originalTotalSet']['shopMoney']['amount']));
 
                     OrderProduct::updateOrCreate(
                         [
@@ -347,6 +348,7 @@ trait ShopifyHelper
                             'shopify_current_quantity' => $lineItemNode['remainingQuantity'] ?? 0,
                             'shopify_variant_id' => str_replace('gid://shopify/ProductVariant/', '',$lineItem['variant']['id'])??null,
                             'shopify_variant_title' => $lineItem['variant']['title'] ?? null,
+                            'shopify_amount' => $lineItem['originalTotalSet']['shopMoney']['amount'],
                             'shopify_fulfillment_order_id' =>str_replace('gid://shopify/FulfillmentOrder/', '',$fulfillmentNode['id']) ?? null,
                         ]
                     );

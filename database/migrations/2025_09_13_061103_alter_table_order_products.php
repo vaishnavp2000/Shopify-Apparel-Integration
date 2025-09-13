@@ -25,6 +25,7 @@ return new class extends Migration
         Schema::table('order_products', function (Blueprint $table) {
              $table->dropColumn('am_order_item_id');
              $table->dropColumn('am_order_id');
+
         });
     }
 };
