@@ -123,6 +123,7 @@ trait ApparelMagicHelper
             foreach ($inventoryItems as $variantData) {
               ProductVariant::updateOrCreate(
                     [
+                        'style_number'=>$variantData['style_number'] ?? null,
                         'color' => !empty($variantData['attr_2']) ? $variantData['attr_2'] : 'MALTESE',
                         'size' => $variantData['size'] ?? null,
                     ],
@@ -481,7 +482,7 @@ trait ApparelMagicHelper
                         ['shopify_order_id' => $order['customer_po']],
                     
                         [
-                            'order_id'=>$order['order_id']??null,
+                            'am_order_id'=>$order['order_id']??null,
                             'customer_id'   => $order['customer_id'] ?? null,
                             'division_id'   => $order['division_id'] ?? null,
                             'warehouse_id'  => $order['warehouse_id'] ?? null,
@@ -516,7 +517,9 @@ trait ApparelMagicHelper
                                     'shopify_sku'=>$item['sku_alt'],
                                 ],
                                     [
-                                        'order_id'=> $item['order_id'] ?? null,
+                                        'order_id'=>$orderDetail->id,
+                                        'am_order_id'=> $item['order_id'] ?? null,
+                                        'am_order_item_id'=>$item['id']??null,
                                         'sku_id' => $item['sku_id']??null,
                                         'product_id'   => $item['product_id'] ?? null,
                                         'sku_alt'      => $item['sku_alt'] ?? null,

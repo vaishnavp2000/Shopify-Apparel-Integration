@@ -34,7 +34,9 @@ class OrderProduct extends Model
         'shopify_current_quantity',
         'shopify_variant_id',
         'shopify_variant_title',
-        'shopify_fulfillment_order_id'
+        'shopify_fulfillment_order_id',
+        'am_order_id',
+        'am_order_item_id'
     ];
     public function Order(){
         return $this->belongsTo(OrderProduct::class, 'shopify_order_id');

@@ -23,7 +23,7 @@ class OrderController extends Controller
      */ public function index(Request $request, Datatables $datatables)
     {
         if ($request->ajax()) {
-            $query = Order::select('order_id','shopify_order_id','customer_name','phone','email','amount','fulfillment_status','date','country','state','balance');
+            $query = Order::select('am_order_id','shopify_order_id','customer_name','phone','email','amount','fulfillment_status','date','country','state','balance');
 
             return DataTables::of($query) 
             ->make(true);
@@ -81,7 +81,7 @@ class OrderController extends Controller
           $orderDetail = Order::updateOrCreate(
             ['shopify_order_id' =>  $item['customer_po']],
             [
-                'order_id'      => $item['order_id'] ?? null,
+                'am_order_id'      => $item['order_id'] ?? null,
                 'customer_id'   => $item['customer_id'] ?? null,
                 'division_id'   => $item['division_id'] ?? null,
                 'warehouse_id'  => $item['warehouse_id'] ?? null,
@@ -103,17 +103,18 @@ class OrderController extends Controller
                 'credit_status'=>$item['credit_status']??null,
                 'fulfillment_status'=>$item['fulfillment_status'] ?? null
 
-            ]
-        );
+            ]);
       if (!empty($item['order_items']) && is_array($item['order_items'])) {
         foreach ($item['order_items'] as $orderItem) {
+
             $orderDetail->orderProducts()->updateOrCreate(
-                [
-                'shopify_order_id'=>$orderDetail->shopify_order_id,
-                'shopify_sku'=>$orderItem['sku_alt'],
+                ['sku_id' => $orderItem['sku_id'],
+                'shopify_sku'=>$orderItem['sku_alt']
             ],
                 [
-                    'sku_id' => $orderItem['sku_id']??null,
+                    'order_id'=>$orderDetail->id,
+                    'am_order_id'=> $orderItem['order_id'] ?? null,
+                    'am_order_item_id'=>$orderItem['id']??null,
                     'product_id'   => $orderItem['product_id'] ?? null,
                     'sku_alt'      => $orderItem['sku_alt'] ?? null,
                     'upc'          => $orderItem['upc'] ?? null,
@@ -177,37 +178,40 @@ class OrderController extends Controller
                 ]
                 );
             if (!empty($item['order_items']) && is_array($item['order_items'])) {
-                foreach ($item['order_items'] as $orderItem) {
-                    $orderDetail->orderProducts()->updateOrCreate(
-                        ['sku_id' => $orderItem['sku_id'],
-                        'shopify_sku'=>$orderItem['sku_alt']
-                      ],
-                        [
-                            'order_id'=>$orderItem['order_id']??null,
-                            'product_id'   => $orderItem['product_id'] ?? null,
-                            'sku_alt'      => $orderItem['sku_alt'] ?? null,
-                            'upc'          => $orderItem['upc'] ?? null,
-                            'style_number' => $orderItem['style_number'] ?? null,
-                            'description'  => $orderItem['description'] ?? null,
-                            'size'         => $orderItem['size'] ?? null,
-                            'qty'          => $orderItem['qty'] ?? 0,
-                            'qty_picked'=>$orderItem['qty_picked']??0,
-                            'qty_cancelled'=>$orderItem['qty_cxl']??0, 
-                            'qty_shipped'=>$orderItem['qty_shipped']??0,
-                            'unit_price'   => $orderItem['unit_price'] ?? 0,
-                            'amount'       => $orderItem['amount'] ?? 0,
-                            'is_taxable'   => $orderItem['is_taxable'] ?? '0',
-                            'warehouse_id' => $orderItem['warehouse_id'] ?? $item['warehouse_id'] ?? null,
-                        ]
-                    );
-                }
-            }
+        foreach ($item['order_items'] as $orderItem) {
+
+            $orderDetail->orderProducts()->updateOrCreate(
+                ['sku_id' => $orderItem['sku_id'],
+                'shopify_sku'=>$orderItem['sku_alt']
+            ],
+                [
+                    'order_id'=>$orderDetail->id,
+                    'am_order_id'=> $orderItem['order_id'] ?? null,
+                    'am_order_item_id'=>$orderItem['id']??null,
+                    'product_id'   => $orderItem['product_id'] ?? null,
+                    'sku_alt'      => $orderItem['sku_alt'] ?? null,
+                    'upc'          => $orderItem['upc'] ?? null,
+                    'style_number' => $orderItem['style_number'] ?? null,
+                    'description'  => $orderItem['description'] ?? null,
+                    'size'         => $orderItem['size'] ?? null,
+                    'qty'          => $orderItem['qty'] ?? 0,
+                    'qty_picked'=>$orderItem['qty_picked']??0,
+                    'qty_cancelled'=>$orderItem['qty_cxl']??0, 
+                    'qty_shipped'=>$orderItem['qty_shipped']??0,
+                    'unit_price'   => $orderItem['unit_price'] ?? 0,
+                    'amount'       => $orderItem['amount'] ?? 0,
+                    'is_taxable'   => $orderItem['is_taxable'] ?? '0',
+                    'warehouse_id' => $orderItem['warehouse_id'] ?? $item['warehouse_id'] ?? null,
+                ]
+            );
+        }
         }
     }
 
 
    }
     }
+}
 
     /**
      * Show the form for creating a new resource.

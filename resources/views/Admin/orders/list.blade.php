@@ -68,7 +68,7 @@
                 <table class="table table-custom table-lg mb-0" id="ordertb">
                    <thead>
                         <tr>
-                          <th>Order ID</th>
+                        <th>Am Order ID</th>
                         <th>Shopify Order ID</th>
                         <th>Customer Name</th>
                         <th>Phone</th>
@@ -144,7 +144,7 @@ var $ordertable = $('#ordertb').DataTable({
         }
     },
    columns: [
-    { data: 'order_id', name: 'order_id' },
+    { data: 'am_order_id', name: 'am_order_id' },
     { data: 'shopify_order_id', name: 'shopify_order_id' },
     { data: 'customer_name', name: 'customer_name' },
     { data: 'phone', name: 'phone' },

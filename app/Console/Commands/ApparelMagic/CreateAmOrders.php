@@ -53,7 +53,7 @@ class CreateAmOrders extends Command
           $orderDetail = Order::updateOrCreate(
             ['shopify_order_id' =>  $item['customer_po']],
             [
-                'order_id'      => $item['order_id'] ?? null,
+                'am_order_id'    => $item['order_id'] ?? null,
                 'customer_id'   => $item['customer_id'] ?? null,
                 'division_id'   => $item['division_id'] ?? null,
                 'warehouse_id'  => $item['warehouse_id'] ?? null,
@@ -79,12 +79,16 @@ class CreateAmOrders extends Command
         );
       if (!empty($item['order_items']) && is_array($item['order_items'])) {
         foreach ($item['order_items'] as $orderItem) {
+
             $orderDetail->orderProducts()->updateOrCreate(
                 ['sku_id' => $orderItem['sku_id'],
-                'shopify_sku'=>$orderItem['sku_alt']
+                'shopify_sku'=>$orderItem['sku_alt'],
+                'am_order_id'=>$orderItem['order_id']
             ],
                 [
-                    'order_id'=> $item['order_id'] ?? null,
+                    'order_id'=>$orderDetail->id,
+                    'am_order_id'=> $orderItem['order_id'] ?? null,
+                    'am_order_item_id'=>$orderItem['id']??null,
                     'product_id'   => $orderItem['product_id'] ?? null,
                     'sku_alt'      => $orderItem['sku_alt'] ?? null,
                     'upc'          => $orderItem['upc'] ?? null,
@@ -104,8 +108,7 @@ class CreateAmOrders extends Command
         }
     }
     }
-
-        } else {
+    } else {
             $this->error("Order not found with ID: {$orderId}");
         }
     } else {
@@ -126,7 +129,7 @@ class CreateAmOrders extends Command
             $orderDetail = Order::updateOrCreate(
                 ['shopify_order_id' => $order->shopify_order_id],
                 [
-                    'order_id'      => $item['order_id'] ?? null,
+                    'am_order_id'      => $item['order_id'] ?? null,
                     'customer_id'   => $item['customer_id'] ?? null,
                     'division_id'   => $item['division_id'] ?? null,
                     'warehouse_id'  => $item['warehouse_id'] ?? null,
@@ -151,12 +154,14 @@ class CreateAmOrders extends Command
             if (!empty($item['order_items']) && is_array($item['order_items'])) {
                 foreach ($item['order_items'] as $orderItem) {
                     $orderDetail->orderProducts()->updateOrCreate(
+                        ['sku_id' => $orderItem['sku_id'],
+                                        'shopify_sku'=>$orderItem['sku_alt'],
+                                        'am_order_id'=>$orderItem['order_id']
+                                    ],
                         [
-                        'shopify_order_id'=>$orderDetail->id,
-                        'shopify_sku'=>$orderItem['sku_alt'],
-                      ],
-                        [
-                            'order_id'=>$orderItem['order_id']??null,
+                            'order_id'=>$orderDetail->id,
+                            'am_order_id'=> $orderItem['order_id'] ?? null,
+                            'am_order_item_id'=>$orderItem['id']??null,
                             'sku_id' => $orderItem['sku_id'],
                             'product_id'   => $orderItem['product_id'] ?? null,
                             'sku_alt'      => $orderItem['sku_alt'] ?? null,
