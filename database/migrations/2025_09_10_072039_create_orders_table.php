@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('warehouse_id')->nullable();
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->unsignedBigInteger('division_id')->nullable();
+            $table->integer('pick_ticket_id')->nullable();
             $table->string('arr_accnt')->nullable();
             $table->unsignedBigInteger('currency_id')->nullable();
             $table->date('date')->nullable();
@@ -34,7 +35,6 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('customer_po')->nullable();
             $table->string('credit_status')->nullable();
-            $table->integer('allocated')->default(0);
             $table->integer('qty')->default(0);
             $table->integer('qty_cancelled')->default(0);
             $table->integer('qty_shipped')->default(0);

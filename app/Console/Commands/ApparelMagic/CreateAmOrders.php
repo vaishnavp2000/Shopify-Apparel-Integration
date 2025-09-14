@@ -42,14 +42,11 @@ class CreateAmOrders extends Command
             if (empty($response['response'])) {
             $this->info("Creating the order");
             $this->createApparelmagicOrder($order);
-            } else {
+            } else 
+            {
             $this->info("updating the order");
 
             $item = $response['response'][0];
-
-            $date = isset($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null;
-            $dateStart = isset($item['date_start']) ? Carbon::parse($item['date_start'])->format('Y-m-d') : null;
-
           $orderDetail = Order::updateOrCreate(
             ['shopify_order_id' =>  $item['customer_po']],
             [
@@ -59,8 +56,8 @@ class CreateAmOrders extends Command
                 'warehouse_id'  => $item['warehouse_id'] ?? null,
                 'currency_id'   => $item['currency_id'] ?? null,
                 'arr_accnt'      => $item['ar_acct'] ?? null,
-                'date'          => $date,
-                'date_start'    => $dateStart,
+                'date'          =>  isset($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null,
+                'date_start'    =>  isset($item['date_start']) ? Carbon::parse($item['date_start'])->format('Y-m-d') : null;,
                 'source'        => $item['source'] ?? null,
                 'notes'         => $item['notes'] ?? null,
                 'customer_name' => $item['name'] ?? null,
@@ -75,16 +72,15 @@ class CreateAmOrders extends Command
                 'credit_status'=>$item['credit_status']??null,
                 'fulfillment_status'=>$item['fulfillment_status'] ?? null
 
-            ]
-        );
+            ]);
       if (!empty($item['order_items']) && is_array($item['order_items'])) {
         foreach ($item['order_items'] as $orderItem) {
 
             $orderDetail->orderProducts()->updateOrCreate(
-                ['sku_id' => $orderItem['sku_id'],
-                                        'shopify_sku'=>$orderItem['sku_alt'],
-                                        'am_order_id'=>$orderItem['order_id']
-                                ],
+        ['sku_id' => $orderItem['sku_id'],
+                                'shopify_sku'=>$orderItem['sku_alt'],
+                                'am_order_id'=>$orderItem['order_id']
+                        ],
                 [
                     'order_id'=>$orderDetail->id,
                     'am_order_id'=> $orderItem['order_id'] ?? null,
@@ -107,7 +103,24 @@ class CreateAmOrders extends Command
             );
         }
     }
+    if (!empty($order) && ($order->credit_status ?? '') != 'Pending') {
+            if ($orderDetail->allocated == 0) {
+                  if ($this->apparelOrderAllocate($order)) {
+                    $orderDetail->allocated = 1;
+                    $orderDetail->save();       
+                  }
+                  
+            }
+            if ($orderDetail->allocated == 1){
+                $pickticket = $this->createApparelPickTicket($order);
+                $orderDetail->pick_ticket_id=$pickticket['pick_ticket_id'];
+                $orderDetail->save();
+
+            }
+            
     }
+
+}
     } else {
             $this->error("Order not found with ID: {$orderId}");
         }

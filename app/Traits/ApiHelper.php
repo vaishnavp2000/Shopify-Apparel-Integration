@@ -36,7 +36,7 @@ trait ApiHelper
     public function apparelMagicApiRequest($url, $params)
     {
         try {
-            // Log::info('Fetching Apparel page', ['url' => $baseUrl, 'params' => $params]);
+            Log::info('Fetching Apparel page', ['url' => $url, 'params' => $params]);
             $request = Http::accept('application/json')
                 ->get($url, $params)
                 ->throw();
