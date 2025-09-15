@@ -41,7 +41,6 @@ return new class extends Migration
             $table->string('shopify_quantity')->nullable();
             $table->string('shopify_current_quantity')->nullable();
             $table->string('shopify_variant_title')->nullable();
-            $table->string('shopify_amount')->nullable();
             $table->timestamps();
         });
     }

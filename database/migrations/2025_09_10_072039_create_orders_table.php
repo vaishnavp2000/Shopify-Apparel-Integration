@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('warehouse_id')->nullable();
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->unsignedBigInteger('division_id')->nullable();
-            $table->integer('pick_ticket_id')->nullable();
             $table->string('arr_accnt')->nullable();
             $table->unsignedBigInteger('currency_id')->nullable();
             $table->date('date')->nullable();
