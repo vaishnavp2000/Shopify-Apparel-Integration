@@ -294,7 +294,6 @@ trait ShopifyHelper
     }
     public function storeShopifyOrder($shopifyOrder)
     {
-    //    info("customer_id".$shopifyOrder['customer']['id']); 
         try {
             $order = Order::updateOrCreate(
                 [
