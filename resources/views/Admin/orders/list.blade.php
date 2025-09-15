@@ -4,6 +4,20 @@
 <link rel="stylesheet" href="{{ url('libs/dataTable/datatables.min.css') }}" type="text/css">
 <link rel="stylesheet" href="{{ url('libs/range-slider/css/ion.rangeSlider.min.css') }}" type="text/css">
 <link rel="stylesheet" href="{{ url("libs/toastr.css") }}" />
+<style>
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+}
+
+.table-responsive table {
+    width: 100%;
+    min-width: 1000px; /* Adjust this based on total column width */
+}
+
+
+</style>
 @endsection
 @section('content')
 <div class="content ">
@@ -79,6 +93,7 @@
                         <th>Country</th>
                         <th>State</th>
                         <th>Balance</th>
+                        <th>Action</th>
                             
                         </tr>
                     </thead>
@@ -126,6 +141,32 @@
   </div>
 </div>
 
+<!-- shipmenet modal -->
+<div class="modal fade" id="fulfilOrderModal" tabindex="-1" aria-labelledby="fulfilOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="fulfilOrderForm" method="POST" action="{{ route('admin.create-shipment') }}">
+            @csrf
+            <input type="hidden" name="order_id" id="modalOrderId" value="">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="fulfilOrderModalLabel">Enter Pickticket ID</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="pickticket_id" class="form-label">Pickticket ID</label>
+                        <input type="text" class="form-control" id="pickticket_id" name="pickticket_id" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Fulfil Order</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 @section('script')
 <script src="{{ url('libs/dataTable/datatables.min.js') }}"></script>
@@ -154,7 +195,8 @@ var $ordertable = $('#ordertb').DataTable({
     { data: 'date', name: 'date' },
     { data: 'country', name: 'country' },
     { data: 'state', name: 'state' },
-    { data: 'balance', name: 'balance' }
+    { data: 'balance', name: 'balance' },
+    {data:'action',name:'action'}
 ],
 
     columnDefs: [{
@@ -258,6 +300,27 @@ $(document).on('click', '#syncAmProductSubmit', function () {
         }
     });
 });
+$(document).ready(function () {
+    // When the fulfil button is clicked
+    $(document).on('click', '.fulfil-order-btn', function () {
+       var orderId = $(this).data('id');
+        $('#modalOrderId').val(orderId); 
+        $('#fulfilOrderModal').modal('show'); 
+         $.ajax({
+            url: $(this).attr('action'),
+             type: 'POST',
+              data: $(this).serialize(),
+               success: function(response) {
+                alert('Order fulfilled successfully!');
+                    $('#fulfilOrderModal').modal('hide');
+                },
+                 error: function(xhr) {
+            alert('An error occurred.');
+            }
+               
+         });
+});
+
 
 
 });

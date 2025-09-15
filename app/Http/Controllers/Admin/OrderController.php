@@ -171,11 +171,19 @@ class OrderController extends Controller
      * Display the specified resource.
      */
    public function show(string $id)
-{
-    $order = Order::with('orderProducts')->find($id);
+    {
+        $order = Order::with('orderProducts')->find($id);
 
-    return view('admin.orders.detail', compact('order'));
-}
+        return view('admin.orders.detail', compact('order'));
+    }
+    public function createShipment(Request $request){
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'pickticket_id' => 'required|string|max:255',
+        ]);  
+        $order = Order::find($request->order_id);
+        $order->pickticket_id = $request->pickticket_id;
+    }
 
     /**
      * Show the form for editing the specified resource.
