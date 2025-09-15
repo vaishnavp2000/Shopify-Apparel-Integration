@@ -729,7 +729,7 @@ trait ApparelMagicHelper
 
     }
    public function createApparelShipment($picktickets)
-{
+    {
     try {
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
         $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
@@ -740,9 +740,9 @@ trait ApparelMagicHelper
         $orderData=Order::where('pick_ticket_id',$selected_pick_ticket_ids)->first();
         $currentShipment= $this->getApparelShipment($selected_pick_ticket_ids);
          if (!empty($currentShipment) && !empty($currentShipment['id'])) {
-            info("shipment_id".json_encode($currentShipment['id']));
             $orderData->shipment_id=$currentShipment['id'];
             $orderData->save();
+            $this->createApparelInvoice($picktickets);
          }
          else{
 
@@ -833,6 +833,56 @@ trait ApparelMagicHelper
         return null;
     }
 }
+    public function createApparelInvoice($pickTicket){
+        info("createApparelInvoice".json_encode($pickTicket));
+        try {
+        $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+        $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+        $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+        $time = time();
+        $url = $apparelUrl . '/invoices';
+        $header=[];
+         $header = [
+            'customer_id' => $pickTicket['customer_id'] ?? 1000,
+            'division_id' => 1016,
+            'warehouse_id' => 1006,
+            'ar_acct' => '1000',
+            'currency_id' => '1000'
+        ];
+         $items = [];
+         if (!empty($pickTicket['pick_ticket_items']) && is_array($pickTicket['pick_ticket_items'])) {
+            foreach ($pickTicket['pick_ticket_items'] as $item) {
+                if (!empty($item['sku_id']) && !empty($item['qty'])) {
+                    $items[] = [
+                        'sku_id' => $item['sku_id'],
+                        'qty' => (string) (int) $item['qty']
+                    ];
+                }
+            }
+        }
+        // info("items".json_encode($items));
+         if (empty($items)) {
+            Log::warning("No SKU items found for invoice creation.");
+            return ['message' => 'No SKU items to create invoice', 'error' => true];
+        }
+         $params = [
+            'time' => (string) $time,
+            'token' => (string) $token,
+            "0" => [
+                'header' => $header,
+                'items' => $items
+            ]
+        ];
+         $response = $this->apparelMagicApiPostRequest($url, $params);
+        Log::info("ApparelMagic invoice creation response: " . json_encode($response));
+
+
+         }catch(Exception $e){
+             Log::error("Error getting apparel invoice: " . $e->getMessage());
+        return null;
+         }
+        
+    }
 
 
     
