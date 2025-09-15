@@ -30,9 +30,9 @@ class OrderController extends Controller
                 ->addColumn('action', function ($order) {
                     return '
                         <div class="d-flex">
-                         <button class="btn btn-sm btn-success fulfil-order-btn" 
+                         <button class="btn btn-sm btn-primary fulfil-order-btn" 
                                 data-id="' . $order->id . '">
-                                Fulfil
+                               Shipment
                             </button>
                             <a href="' . route('admin.order.show', $order->id) . '" 
                                 class="btn btn-sm btn-clean btn-icon text-end" 
@@ -177,12 +177,34 @@ class OrderController extends Controller
         return view('admin.orders.detail', compact('order'));
     }
     public function createShipment(Request $request){
+        // dd($request->pickticket_id);
         $request->validate([
             'order_id' => 'required|exists:orders,id',
             'pickticket_id' => 'required|string|max:255',
         ]);  
-        $order = Order::find($request->order_id);
-        $order->pickticket_id = $request->pickticket_id;
+        $pickticket_id=$request->pickticket_id;
+        if($pickticket_id){
+            $picktickets=$this->getApparelPickTickets($pickticket_id);
+             $result=$this->createApparelShipment($picktickets);
+            if (!empty($result['error'])) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'] ?? 'Shipment creation failed'
+            ], 500);
+            }
+             return response()->json([
+            'success' => true,
+            'message' => $result['message'] ?? 'Shipment processed successfully',
+            'ship_id' => $result['ship_id'] ?? null
+            ], 200);
+        }
+         return response()->json([
+        'success' => false,
+        'message' => 'Pick ticket ID is required'
+         ], 400);
+
+
+
     }
 
     /**

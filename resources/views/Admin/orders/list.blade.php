@@ -144,7 +144,7 @@
 <!-- shipmenet modal -->
 <div class="modal fade" id="fulfilOrderModal" tabindex="-1" aria-labelledby="fulfilOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form id="fulfilOrderForm" method="POST" action="{{ route('admin.create-shipment') }}">
+        <form id="fulfilOrderForm">
             @csrf
             <input type="hidden" name="order_id" id="modalOrderId" value="">
             <div class="modal-content">
@@ -160,7 +160,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Fulfil Order</button>
+                    <button type="button"  class="btn btn-primary fulfill-order">Fulfil Order</button>
                 </div>
             </div>
         </form>
@@ -301,28 +301,54 @@ $(document).on('click', '#syncAmProductSubmit', function () {
     });
 });
 $(document).ready(function () {
-    // When the fulfil button is clicked
+
     $(document).on('click', '.fulfil-order-btn', function () {
-       var orderId = $(this).data('id');
+        var orderId = $(this).data('id');
         $('#modalOrderId').val(orderId); 
         $('#fulfilOrderModal').modal('show'); 
-         $.ajax({
-            url: $(this).attr('action'),
-             type: 'POST',
-              data: $(this).serialize(),
-               success: function(response) {
-                alert('Order fulfilled successfully!');
-                    $('#fulfilOrderModal').modal('hide');
-                },
-                 error: function(xhr) {
-            alert('An error occurred.');
-            }
-               
+    });
+
+    $(document).on('click', '.fulfill-order', function () {
+    var orderId = $('#modalOrderId').val();
+    var pickticket_id = $('#pickticket_id').val();
+
+    if(!pickticket_id) {
+        alert('Please enter Pickticket ID');
+        return;
+    }
+
+    $.ajax({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        url: '{{ route("admin.create-shipment") }}', 
+        type: 'POST',
+        data: {
+            order_id: orderId,
+            pickticket_id: pickticket_id
+        },
+        success: function(response) {
+          $('#fulfilOrderModal').modal('hide');
+           Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: response.message || 'Products synced successfully.',
          });
+        },
+        error: function(xhr) {
+              $('#fulfilOrderModal').modal('hide');
+               Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: (xhr.responseJSON && xhr.responseJSON.message) 
+                        ? xhr.responseJSON.message 
+                        : 'Failed to sync products.',
+                });
+        }
+    });
 });
 
-
-
+});
 });
 
 

@@ -20,6 +20,7 @@ Route::prefix('admin')->name('admin.')->namespace('App\Http\Controllers\Admin')-
         Route::resource('order', App\Http\Controllers\Admin\OrderController::class);
         Route::post('fetch-orders', [App\Http\Controllers\Admin\OrderController::class, 'fetchOrders'])->name('fetch-orders');
         Route::post('create-am-orders', [App\Http\Controllers\Admin\OrderController::class, 'createAmOrders'])->name('create-am-orders');
+        Route::post('create-shipment', [App\Http\Controllers\Admin\OrderController::class, 'createShipment'])->name('create-shipment');
 
 
 

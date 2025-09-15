@@ -37,6 +37,7 @@ class Order extends Model
         'fulfillment_status',
         'balance',
         'pick_ticket_id',
+        'shipment_id',
         'allocated',
         'shopify_order_id',
         'shopify_email',
