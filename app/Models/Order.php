@@ -38,6 +38,8 @@ class Order extends Model
         'balance',
         'pick_ticket_id',
         'shipment_id',
+        'am_invoice_id',
+        'is_cancelled',
         'allocated',
         'shopify_order_id',
         'shopify_email',
