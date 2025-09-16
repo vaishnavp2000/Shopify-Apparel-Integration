@@ -82,20 +82,17 @@
                 <table class="table table-custom table-lg mb-0" id="ordertb">
                    <thead>
                         <tr>
-                        <th>Am Order ID</th>
                         <th>Shopify Order ID</th>
-                        <th>Customer Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Amount</th>
-                        <th>Fulfillment Status</th>
+                        <th>Am Order ID</th>
+                        <th>Am Pickticket ID</th>
+                        <th>Shipment Id</th>
                         <th>Date</th>
-                        <th>Country</th>
-                        <th>State</th>
-                        <th>Balance</th>
+                        <th>Customer</th>
+                        <th>Qty</th>
+                        <th>Fulfillment Status</th>
+                        <th>Confirmation</th>
                         <th>Action</th>
-                            
-                        </tr>
+                    </tr>
                     </thead>
                 </table>
             </div>
@@ -166,6 +163,24 @@
         </form>
     </div>
 </div>
+<!-- order cancel modal -->
+ <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cancelOrderModalLabel">Confirm Cancel Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to cancel this order?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+        <button type="button" class="btn btn-danger" id="confirmCancelOrder">Yes, Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 @endsection
 @section('script')
@@ -185,17 +200,17 @@ var $ordertable = $('#ordertb').DataTable({
         }
     },
    columns: [
-    { data: 'am_order_id', name: 'am_order_id' },
     { data: 'shopify_order_id', name: 'shopify_order_id' },
-    { data: 'customer_name', name: 'customer_name' },
-    { data: 'phone', name: 'phone' },
-    { data: 'email', name: 'email' },
-    { data: 'amount', name: 'amount' },
-    { data: 'fulfillment_status', name: 'fulfillment_status' },
+    { data: 'am_order_id', name: 'am_order_id' },
+    { data:'pick_ticket_id',name:'pick_ticket_id'},
+    {data:'shipment_id',name:'shipment_id'},
     { data: 'date', name: 'date' },
-    { data: 'country', name: 'country' },
-    { data: 'state', name: 'state' },
-    { data: 'balance', name: 'balance' },
+    { data: 'customer_name', name: 'customer_name' },
+    { data: 'qty', name: 'qty'},
+    { data: 'fulfillment_status', name: 'fulfillment_status' },
+    {
+        data:'confirmation',name:'confirmation'
+    },
     {data:'action',name:'action'}
 ],
 
@@ -349,6 +364,51 @@ $(document).ready(function () {
 });
 
 });
+    let cancelOrderId = null;
+    $(document).on('click', '.cancel_order_btn', function() {
+        cancelOrderId = $(this).data('id'); 
+        console.log("cancelorderId",cancelOrderId);
+        $('#cancelOrderModal').modal('show');
+    });
+    $('#confirmCancelOrder').on('click', function() {
+        if (!cancelOrderId) return;
+        $.ajax({
+            url: "{{ route('admin.cancel-order') }}", 
+            method: 'POST',
+            data: {
+                order_id: cancelOrderId,
+                _token: $('meta[name="csrf-token"]').attr('content') 
+            },
+            success: function(response) {
+            $('#cancelOrderModal').modal('hide');
+                if(response.success){
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message || 'Order Cancelled Successfully.',
+                });
+                    
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'error!',
+                        text: response.message || 'Failed to Cancel Order.',
+                });
+                }
+            },
+            error: function(xhr) {
+            $('#cancelOrderModal').modal('hide');
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: (xhr.responseJSON && xhr.responseJSON.message) 
+                        ? xhr.responseJSON.message 
+                        : 'Failed to cancel order.',
+                });
+            }
+        });
+
+    });
 });
 
 

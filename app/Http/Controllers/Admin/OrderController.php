@@ -21,27 +21,36 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
-   public function index(Request $request)
+    public function index(Request $request)
     {
         if ($request->ajax()) {
             $query = Order::select('orders.*')->orderBy('id', 'asc');
 
             return DataTables::of($query)
+                ->addColumn('confirmation', function ($order) {
+                    return '
+                        <div class="d-flex">
+                             <button class="btn btn-sm btn-info cancel_order_btn" 
+                                data-id="' . $order->id . '">
+                              Cancel Order
+                            </button>
+                        </div>';
+                })
                 ->addColumn('action', function ($order) {
                     return '
                         <div class="d-flex">
-                         <button class="btn btn-sm btn-primary fulfil-order-btn" 
-                                data-id="' . $order->id . '">
-                              Fulfill Order
-                            </button>
                             <a href="' . route('admin.order.show', $order->id) . '" 
                                 class="btn btn-sm btn-clean btn-icon text-end" 
                                 title="Show">
                                 <i class="fa fa-eye"></i>
                             </a>
+                             <button class="btn btn-sm btn-primary fulfil-order-btn" 
+                                data-id="' . $order->id . '">
+                              Fulfill Order
+                            </button>
                         </div>';
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'confirmation'])
                 ->make(true);
         }
 
@@ -116,7 +125,8 @@ class OrderController extends Controller
             } else {
                 $this->error("Order not found with ID: {$orderId}");
             }
-        }  if ($sync_all == 1)  {
+        }
+        if ($sync_all == 1) {
             $orders = Order::with('orderProducts')->whereNotNull('shopify_order_id')->get();
 
             foreach ($orders as $order) {
@@ -126,7 +136,7 @@ class OrderController extends Controller
                     info("Creating the order");
                     // CreateApparelOrders::dispatch($order);
                 } else {
-                   info("updating the order...");
+                    info("updating the order...");
                     $item = $response['response'][0];
                     $this->updateApparelOrder($item);
                     $orderData = Order::where('am_order_id', $item['order_id'])->first();
@@ -170,42 +180,83 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-   public function show(string $id)
+    public function show(string $id)
     {
         $order = Order::with('orderProducts')->find($id);
 
         return view('admin.orders.detail', compact('order'));
     }
-    public function createShipment(Request $request){
-        // dd($request->pickticket_id);
+    public function createShipment(Request $request)
+    {
         $request->validate([
             'order_id' => 'required|exists:orders,id',
             'pickticket_id' => 'required|string|max:255',
-        ]);  
-        $pickticket_id=$request->pickticket_id;
-        if($pickticket_id){
-            $picktickets=$this->getApparelPickTickets($pickticket_id);
-             $result=$this->createApparelShipment($picktickets);
+        ]);
+        $pickticket_id = $request->pickticket_id;
+        if ($pickticket_id) {
+            $picktickets = $this->getApparelPickTickets($pickticket_id);
+            $result = $this->createApparelShipment($picktickets);
             if (!empty($result['error'])) {
-            return response()->json([
-                'success' => false,
-                'message' => $result['message'] ?? 'Shipment creation failed'
-            ], 500);
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message'] ?? 'Shipment creation failed'
+                ], 500);
             }
-             return response()->json([
-            'success' => true,
-            'message' => $result['message'] ?? 'Shipment processed successfully',
-            'ship_id' => $result['ship_id'] ?? null
+            return response()->json([
+                'success' => true,
+                'message' => $result['message'] ?? 'Shipment processed successfully',
+                'ship_id' => $result['ship_id'] ?? null
             ], 200);
         }
-         return response()->json([
-        'success' => false,
-        'message' => 'Pick ticket ID is required'
-         ], 400);
+        return response()->json([
+            'success' => false,
+            'message' => 'Pick ticket ID is required'
+        ], 400);
 
 
 
     }
+    public function cancelOrder(Request $request)
+{
+    $orderId = $request->order_id;
+
+    if (!$orderId) {
+        return response()->json(['success' => false, 'message' => 'No order ID provided.']);
+    }
+
+    $order = Order::find($orderId);
+
+    if (!$order) {
+        return response()->json(['success' => false, 'message' => 'Order not found.']);
+    }
+
+    if ($order->is_cancelled) {
+        return response()->json(['success' => false, 'message' => 'Order already cancelled.']);
+    }
+
+    $amOrderId = $order->am_order_id;
+
+    if (empty($amOrderId)) {
+        return response()->json(['success' => false, 'message' => 'Missing ApparelMagic order ID.']);
+    }
+
+    $apparelOrder = $this->getAmOrderById($amOrderId);
+
+    if (empty($apparelOrder['response']) || !is_array($apparelOrder['response'])) {
+        return response()->json(['success' => false, 'message' => 'No ApparelMagic order found.']);
+    }
+
+    $orderCancelResponse = $this->cancelApparelOrder($amOrderId);
+
+    if (!empty($orderCancelResponse)) {
+        $order->is_cancelled = 1;
+        $order->save();
+        return response()->json(['success' => true, 'message' => 'Order cancelled successfully.']);
+    }
+
+    return response()->json(['success' => false, 'message' => 'Order cancellation failed.']);
+}
+
 
     /**
      * Show the form for editing the specified resource.
