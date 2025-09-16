@@ -32,7 +32,7 @@ class OrderController extends Controller
                         <div class="d-flex">
                          <button class="btn btn-sm btn-primary fulfil-order-btn" 
                                 data-id="' . $order->id . '">
-                               Shipment
+                              Fulfill Order
                             </button>
                             <a href="' . route('admin.order.show', $order->id) . '" 
                                 class="btn btn-sm btn-clean btn-icon text-end" 
