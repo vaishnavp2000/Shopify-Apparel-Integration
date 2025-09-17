@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\Setting;
 use App\Traits\ApiHelper;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -357,6 +358,184 @@ trait ShopifyHelper
             }
         } catch (Exception $e) {
             Log::error("Failed to store Shopify order", ['error' => $e->getMessage()]);
+        }
+    }
+    public function shopifyFulfilOrder($order){
+        $site = 1;
+        $getshipment= $this->getApparelShipment($order->pick_ticket_id);
+        if (empty($getshipment)) {
+            return ['message' => 'No shipments found for this order', 'error' => 1];
+        }
+         $pickticket = $this->getApparelPickTickets($order->pick_ticket_id);
+          if (empty($pickticket)) {
+            return ['message' => 'Pickticket not found from this order', 'error' => 1];
+        }
+        $shopifyOrderResponse = $this->getShopifyOrderByName($order->shopify_order_name);
+        info("shopify_order_response".json_encode($shopifyOrderResponse));
+
+
+    }
+      public function getShopifyOrderByName($orderName)
+     {
+        try {
+            $settings = Setting::where('type', 'shopify')->where('status', 1)->get();
+            $filter = 'name:' . $orderName;
+            $queryString = 'query order($filter: String) {
+                orders(first: 1, query: $filter) {
+                    edges { 
+                        node {
+                            id
+                            email
+                            name
+                            displayFulfillmentStatus
+                            displayFinancialStatus
+                            createdAt
+                            updatedAt
+                            paymentGatewayNames
+                            note
+                            currencyCode
+                            shippingLine {
+                                code
+                            }
+                            totalShippingPriceSet{
+                                shopMoney{
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            totalTaxSet{
+                                shopMoney{
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            totalDiscountsSet {
+                                shopMoney{
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            subtotalPriceSet {
+                                shopMoney{
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            totalPriceSet {
+                                shopMoney{
+                                    amount
+                                    currencyCode
+                                }
+                            }
+                            fulfillmentOrders(first:5) {
+                                edges {
+                                    cursor
+                                    node {
+                                        id
+                                        status
+                                        lineItems (first:25) {
+                                            edges{
+                                                node{
+                                                    id
+                                                    lineItem {
+                                                        sku,
+                                                        customAttributes{
+                                                            key
+                                                            value
+                                                        }
+                                                        variant{
+                                                            id
+                                                            title
+                                                            sku
+                                                        }
+                                                    }
+                                                    totalQuantity
+                                                    remainingQuantity
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            billingAddress{
+                                id
+                                name
+                                firstName
+                                lastName
+                                company
+                                address1
+                                address2
+                                provinceCode
+                                city
+                                zip
+                                country
+                                countryCodeV2
+                                phone
+                            }
+                            shippingAddress{
+                                id
+                                name
+                                firstName
+                                lastName
+                                company
+                                address1
+                                address2
+                                provinceCode
+                                city
+                                zip
+                                country
+                                countryCodeV2
+                                phone
+                            }
+                            customer{
+                                email
+                                phone
+                            }
+                            lineItems (first: 25){
+                                edges{
+                                    node{
+                                        id
+                                        title
+                                        sku
+                                        quantity
+                                        currentQuantity
+                                        originalTotalSet {
+                                            shopMoney{
+                                                amount
+                                                currencyCode
+                                            }
+                                        }
+                                        customAttributes{
+                                            key
+                                            value
+                                        }
+                                        variant{
+                                            id
+                                            title
+                                            image{
+                                                url
+                                            }
+                                            sku
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }'; ['filter' => $filter];
+            Log::info($queryString);
+            $result = $this->getHttp($queryString,['filter' => $filter]);
+            Log::info(json_encode($result));
+            if ($result['errors'] == false) {
+               // $log = $this->logApi('Shopify', 'GET', 'getOrders', $filter, json_encode($result), 200, $filter);       
+                return $result['body']['container']['data']['orders']['edges'];
+            } else {
+                $log = $this->logApi('Shopify', 'GET', 'getOrders', $filter, json_encode($result), 500, $filter);
+                return null;
+            }
+        } catch (Exception $e) {
+            dd($e);
         }
     }
 
