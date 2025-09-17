@@ -971,6 +971,40 @@ trait ApparelMagicHelper
         info("response" . json_encode($response));
         return $response;
     }
-    
+
+    // protected function getShipmentByOrder($order)
+    // {
+    // try {
+    //     $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+    //     $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+    //     $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+    //     $time = time();
+    //     $url = $apparelUrl . '/shipments';
+
+    //     $params = [
+    //         'time' => (string) $time,
+    //         'token' => (string) $token,
+
+    //     ];
+
+    //     $response = $this->apparelMagicApiRequest($url, $params);
+
+    //     if (!empty($response['response']) && is_array($response['response'])) {
+    //         foreach ($response['response'] as $shipment) {
+    //             if (!empty($shipment['boxes']) && is_array($shipment['boxes'])) {
+    //                 foreach ($shipment['boxes'] as $box) {
+    //                     if (!empty($box['order_id']) && $box['order_id'] == $order->id) {
+    //                         return $shipment; 
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return null; // No shipment found for this order
+    // } catch (\Exception $e) {
+    //     return null;
+    // }
+    // }
+
 
 }

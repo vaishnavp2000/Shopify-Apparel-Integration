@@ -71,6 +71,9 @@
                               <button class="btn btn-primary btn-icon" id="sync_am_order" data-bs-toggle="modal" data-bs-target="#syncAmOrderModal">
                                 <i class="bi bi-plus-circle me-1"></i>Create Am Order
                             </button>
+                              <button class="btn btn-primary btn-icon" id="create_shipment" data-bs-toggle="modal" data-bs-target="#shipmentModal">
+                                <i class="bi bi-plus-circle me-1"></i>Create Shipment
+                            </button>
                             </a>
                         </div>
                        
@@ -139,30 +142,29 @@
 </div>
 
 <!-- shipmenet modal -->
-<div class="modal fade" id="fulfilOrderModal" tabindex="-1" aria-labelledby="fulfilOrderModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <form id="fulfilOrderForm">
-            @csrf
-            <input type="hidden" name="order_id" id="modalOrderId" value="">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="fulfilOrderModalLabel">Enter Pickticket ID</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="pickticket_id" class="form-label">Pickticket ID</label>
-                        <input type="text" class="form-control" id="pickticket_id" name="pickticket_id" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button"  class="btn btn-primary fulfill-order">Fulfil Order</button>
-                </div>
-            </div>
-        </form>
-    </div>
+<div class="modal fade" id="shipmentModal" tabindex="-1" aria-labelledby="shipmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="createShipmentForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="shipmentModalLabel">Create Shipment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="order_ids" class="form-label">Enter Order IDs (comma separated)</label>
+            <textarea class="form-control" id="order_ids" name="order_ids" rows="5" placeholder="e.g., 101, 102, 103"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-primary">Create Shipment</button>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
+
 <!-- order cancel modal -->
  <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -315,53 +317,8 @@ $(document).on('click', '#syncAmProductSubmit', function () {
         }
     });
 });
-$(document).ready(function () {
 
-    $(document).on('click', '.fulfil-order-btn', function () {
-        var orderId = $(this).data('id');
-        $('#modalOrderId').val(orderId); 
-        $('#fulfilOrderModal').modal('show'); 
-    });
 
-    $(document).on('click', '.fulfill-order', function () {
-    var orderId = $('#modalOrderId').val();
-    var pickticket_id = $('#pickticket_id').val();
-
-    if(!pickticket_id) {
-        alert('Please enter Pickticket ID');
-        return;
-    }
-
-    $.ajax({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        url: '{{ route("admin.create-shipment") }}', 
-        type: 'POST',
-        data: {
-            order_id: orderId,
-            pickticket_id: pickticket_id
-        },
-        success: function(response) {
-          $('#fulfilOrderModal').modal('hide');
-           Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: response.message || 'Products synced successfully.',
-         });
-        },
-        error: function(xhr) {
-              $('#fulfilOrderModal').modal('hide');
-               Swal.fire({
-                    icon: 'error',
-                    title: 'Error!',
-                    text: (xhr.responseJSON && xhr.responseJSON.message) 
-                        ? xhr.responseJSON.message 
-                        : 'Failed to sync products.',
-                });
-        }
-    });
-});
 
 });
     let cancelOrderId = null;
@@ -409,7 +366,43 @@ $(document).ready(function () {
         });
 
     });
+
+$(document).ready(function() {
+    $('#createShipmentForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        let orderIds = $('#order_ids').val();
+        
+        if(orderIds.trim() === '') {
+            alert('Please enter at least one order ID.');
+            return;
+        }
+
+        $.ajax({
+            url: "{{ route('admin.create-shipment') }}", 
+            data: {
+                order_ids: orderIds,
+                _token: '{{ csrf_token() }}'
+            },
+            method:'Post',
+            success: function(response) {
+                
+                $('#shipmentModal').modal('hide');
+                 Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message || 'Shipment Compleetd Successfully.',
+                });
+            },
+            error: function(xhr) {
+                alert('Error creating shipment.');
+            }
+        });
+    });
 });
+
+
+
 
 
 
