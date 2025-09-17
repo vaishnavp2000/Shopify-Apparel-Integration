@@ -480,6 +480,7 @@ trait ApparelMagicHelper
                 foreach ($amOrders as $order) {
                     $this->saveApparelOrders($order);
                     $orderData = Order::where('am_order_id', $order['order_id'])->first();
+                    // info("orderDtata".json_encode($orderData));
                     if (!empty($orderData) && ($orderData->credit_status ?? '') != 'Pending') {
                         if ($orderData->allocated == 0) {
                             if ($this->apparelOrderAllocate($orderData)) {
@@ -638,6 +639,7 @@ trait ApparelMagicHelper
     }
     public function apparelOrderAllocate($order)
     {
+        info("apparelOrderallocate".json_encode($order));
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
         $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
         $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
@@ -649,7 +651,9 @@ trait ApparelMagicHelper
         ];
         $itemCollection = [];
         $response = $this->getApparelOrder($order->shopify_order_id);
+        // info("order_items".json_encode($response));
         $orderProducts = $response['response'][0]['order_items'];
+        // info("orderItems".json_encode($orderProducts));
         $orderProducts = collect($orderProducts);
         $items = $orderProducts->where('qty_open', '>', 0);
         if (!empty($items) && $items->count() > 0) {
@@ -659,12 +663,13 @@ trait ApparelMagicHelper
         if (empty($items)) {
             return false;
         }
+        info("item_ids".json_encode($itemCollection));
         $request['item_ids'] = $itemCollection;
         $params['item_ids'] = $request['item_ids'];
         info(json_encode($params));
         $allocate = $this->apparelMagicApiPutRequest($url, $params);
-        //  info("allocate response".json_encode($allocate));
-        if (!empty($allocate['response']) && !empty($allocate['response']['response'])) {
+         info("allocate response".json_encode($allocate));
+        if (!empty($allocate['response']) && !empty($allocate['response'])) {
             return true;
         } else {
             return false;
@@ -734,6 +739,7 @@ trait ApparelMagicHelper
     public function createApparelShipment($picktickets)
     {
         try {
+            info("create shipment");
             $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
             $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
             $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
@@ -750,7 +756,7 @@ trait ApparelMagicHelper
                 $box_items = [];
                 if (!empty($picktickets['pick_ticket_items']) && is_array($picktickets['pick_ticket_items'])) {
                     foreach ($picktickets['pick_ticket_items'] as $pick_ticket_item) {
-                        // info("pick_ticket_item: " . json_encode($pick_ticket_item));
+                        info("pick_ticket_item: " . json_encode($pick_ticket_item));
 
                         if (!empty($pick_ticket_item['sku_id']) && !empty($pick_ticket_item['qty'])) {
                             $box_items[] = [
@@ -975,8 +981,7 @@ trait ApparelMagicHelper
         return $response;
     }
 
-    //shopify fulfilment
-
+    
     
 
     // protected function getShipmentByOrder($order)

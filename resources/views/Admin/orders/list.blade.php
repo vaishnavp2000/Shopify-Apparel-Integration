@@ -141,6 +141,26 @@
   </div>
 </div>
 
+ <!-- Fulfil Order Modal -->
+<div class="modal" id="fulfilOrderModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Fulfill Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modalOrderId">
+        <label>Tracking Number</label>
+        <input type="text" id="trackingNumber" class="form-control" placeholder="Enter tracking number">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="confirmFulfillBtn" class="btn btn-primary">Confirm Fulfill</button>
+      </div>
+    </div>
+  </div>
+</div>
 <!-- shipmenet modal -->
 <div class="modal fade" id="shipmentModal" tabindex="-1" aria-labelledby="shipmentModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -400,6 +420,53 @@ $(document).ready(function() {
         });
     });
 });
+
+$(document).ready(function() {
+    $(document).on('click', '.fulfil-order-btn', function() {
+        var orderId = $(this).data('id');
+        $('#modalOrderId').val(orderId);
+        $('#fulfilOrderModal').modal('show');
+    });
+
+    $('#confirmFulfillBtn').click(function() {
+        var orderId = $('#modalOrderId').val();
+        var trackingNumber = $('#trackingNumber').val();
+
+        console.log("Order ID:", orderId);
+        console.log("Tracking Number:", trackingNumber);
+
+        $.ajax({
+            url: "{{ route('admin.fulfil-order') }}", 
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}', 
+                order_id: orderId,
+                tracking_number: trackingNumber
+            },
+            success: function(response) {
+                $('#fulfilOrderModal').modal('hide');
+                Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message || 'Order Fulfillment Completed Successfully.',
+                });
+            },
+            error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: response.message || 'Failed to complete the Fulfilment.',
+                });
+            }
+        });
+    });
+});
+
+
+
+
+
+
 
 
 

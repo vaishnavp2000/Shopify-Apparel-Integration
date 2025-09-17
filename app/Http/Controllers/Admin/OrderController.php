@@ -8,6 +8,7 @@ use App\Jobs\Shopify\GetShopifyOrders;
 use App\Models\Order;
 use App\Models\Setting;
 use App\Traits\ApparelMagic\ApparelMagicHelper;
+use App\Traits\Shopify\ShopifyHelper;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -17,7 +18,7 @@ use Carbon\Carbon;
 
 class OrderController extends Controller
 {
-    use ApparelMagicHelper;
+    use ApparelMagicHelper,ShopifyHelper;
     /**
      * Display a listing of the resource.
      */
@@ -126,7 +127,7 @@ class OrderController extends Controller
                 }
 
             } else {
-                $this->error("Order not found with ID: {$orderId}");
+                ("Order not found with ID: {$orderId}");
             }
         }
         if ($sync_all == 1) {
@@ -191,11 +192,13 @@ class OrderController extends Controller
     }
   public function createShipment(Request $request)
 {
+    // dd("createShipment");
     $request->validate([
         'order_ids' => 'required',
     ]);
 
     $orderIds =  is_array($request->order_ids) ? $request->order_ids : explode(',', $request->order_ids);
+    // dd($orderIds);
     $results = [];
 
     foreach ($orderIds as $orderId) {
@@ -218,6 +221,7 @@ class OrderController extends Controller
         }
 
         $picktickets = $this->getApparelPickTickets($order->pick_ticket_id);
+        // dd($picktickets);
 
         if (empty($picktickets)) {
             $results[$orderId] = [
@@ -226,8 +230,8 @@ class OrderController extends Controller
             ];
             continue;
         }
-
-        $result = $this->createApparelShipment($picktickets);
+             $result = $this->createApparelShipment($picktickets);
+        
 
         if (!empty($result['error'])) {
             $results[$orderId] = [
@@ -289,11 +293,36 @@ class OrderController extends Controller
 
     return response()->json(['success' => false, 'message' => 'Order cancellation failed.']);
 }
-    public function fulfilOrder(Request $request){
-       $orderId=$request->order_id;
-       $order=Order::find($orderId);
-       
+public function fulfilOrder(Request $request)
+{
+    $orderId = $request->order_id;
+    $order = Order::find($orderId);
+
+    if (empty($order)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Order not found'
+        ], 404);
     }
+
+    try {
+        $result = $this->shopifyFulfilOrder($order);
+
+        return response()->json([
+            'success' => $result['error'] === 0,
+            'message' => $result['message'] ?? 'Fulfillment process completed'
+        ], 200);
+
+    } catch (\Exception $e) {
+      
+
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while fulfilling the order'
+        ], 500);
+    }
+}
+
 
 
     /**
