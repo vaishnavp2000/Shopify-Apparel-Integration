@@ -712,6 +712,7 @@ trait ApparelMagicHelper
 
     public function getApparelPickTickets($pickticket_id)
     {
+        info("getApparelPickTickets".json_encode($pickticket_id));
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
         $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
         $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
@@ -726,7 +727,6 @@ trait ApparelMagicHelper
         if (!empty($response['response']) && is_array($response['response'])) {
             info("apparel pickticket" . json_encode($response['response'][0]));
             return $response['response'][0];
-
         }
         return null;
 
@@ -922,6 +922,8 @@ trait ApparelMagicHelper
     }
 
 
+
+
     public function getApparelOrder($orderId)
     {
         // info("orderid".json_encode($orderId));
@@ -945,10 +947,11 @@ trait ApparelMagicHelper
         $response = $this->apparelMagicApiRequest($url, $params);
         info("response" . json_encode($response));
         return $response;
-
-
     }
-    public function getAmOrderById($orderId){
+
+
+    public function getAmOrderById($orderId)
+    {
 
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
         $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
@@ -971,6 +974,10 @@ trait ApparelMagicHelper
         info("response" . json_encode($response));
         return $response;
     }
+
+    //shopify fulfilment
+
+    
 
     // protected function getShipmentByOrder($order)
     // {

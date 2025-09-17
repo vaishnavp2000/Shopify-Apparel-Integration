@@ -28,6 +28,7 @@ class OrderController extends Controller
 
             return DataTables::of($query)
                 ->addColumn('confirmation', function ($order) {
+                     if (empty($order->shipment_id)&&$order->is_cancelled == 0) {
                     return '
                         <div class="d-flex">
                              <button class="btn btn-sm btn-info cancel_order_btn" 
@@ -35,6 +36,8 @@ class OrderController extends Controller
                               Cancel Order
                             </button>
                         </div>';
+                     }
+                      return '';
                 })
                 ->addColumn('action', function ($order) {
                     return '
@@ -186,36 +189,66 @@ class OrderController extends Controller
 
         return view('admin.orders.detail', compact('order'));
     }
-    public function createShipment(Request $request)
-    {
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'pickticket_id' => 'required|string|max:255',
-        ]);
-        $pickticket_id = $request->pickticket_id;
-        if ($pickticket_id) {
-            $picktickets = $this->getApparelPickTickets($pickticket_id);
-            $result = $this->createApparelShipment($picktickets);
-            if (!empty($result['error'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result['message'] ?? 'Shipment creation failed'
-                ], 500);
-            }
-            return response()->json([
+  public function createShipment(Request $request)
+{
+    $request->validate([
+        'order_ids' => 'required',
+    ]);
+
+    $orderIds =  is_array($request->order_ids) ? $request->order_ids : explode(',', $request->order_ids);
+    $results = [];
+
+    foreach ($orderIds as $orderId) {
+        $order = Order::where('am_order_id',$orderId)->first();
+        // dd($order);
+        if (!$order) {
+            $results[$orderId] = [
+                'success' => false,
+                'message' => 'Order not found'
+            ];
+            continue;
+        }
+
+        if (empty($order->pick_ticket_id)) {
+            $results[$orderId] = [
+                'success' => false,
+                'message' => 'Pick ticket ID is missing'
+            ];
+            continue;
+        }
+
+        $picktickets = $this->getApparelPickTickets($order->pick_ticket_id);
+
+        if (empty($picktickets)) {
+            $results[$orderId] = [
+                'success' => false,
+                'message' => 'Pick ticket details not found'
+            ];
+            continue;
+        }
+
+        $result = $this->createApparelShipment($picktickets);
+
+        if (!empty($result['error'])) {
+            $results[$orderId] = [
+                'success' => false,
+                'message' => $result['message'] ?? 'Shipment creation failed'
+            ];
+        } else {
+            $results[$orderId] = [
                 'success' => true,
                 'message' => $result['message'] ?? 'Shipment processed successfully',
                 'ship_id' => $result['ship_id'] ?? null
-            ], 200);
+            ];
         }
-        return response()->json([
-            'success' => false,
-            'message' => 'Pick ticket ID is required'
-        ], 400);
-
-
-
     }
+
+    return response()->json([
+        'success' => true,
+        'results' => $results
+    ], 200);
+}
+
     public function cancelOrder(Request $request)
 {
     $orderId = $request->order_id;
@@ -256,6 +289,11 @@ class OrderController extends Controller
 
     return response()->json(['success' => false, 'message' => 'Order cancellation failed.']);
 }
+    public function fulfilOrder(Request $request){
+       $orderId=$request->order_id;
+       $order=Order::find($orderId);
+       
+    }
 
 
     /**
