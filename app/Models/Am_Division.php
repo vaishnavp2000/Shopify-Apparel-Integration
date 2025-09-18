@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Am_Division extends Model
 {
-    protected $fillable = ['division_id', 'name']; 
+    protected $fillable = ['division_id', 'name','status']; 
 }

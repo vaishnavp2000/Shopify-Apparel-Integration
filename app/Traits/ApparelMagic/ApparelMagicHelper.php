@@ -322,7 +322,8 @@ trait ApparelMagicHelper
                 foreach ($fetchedCustomers as $cust) {
                     Am_Customer::updateOrCreate(
                         ['am_customer_id' => $cust['customer_id']],
-                        ['name' => $cust['customer_name']]
+                        ['name' => $cust['customer_name'],'status'=>1
+                        ]
                     );
                 }
 
@@ -356,7 +357,7 @@ trait ApparelMagicHelper
                 foreach ($fetchedWarehouses as $warehouse) {
                     Am_Warehouse::updateOrCreate(
                         ['warehouse_id' => $warehouse['id']],
-                        ['name' => $warehouse['name']]
+                        ['name' => $warehouse['name'], 'status' => 1]
                     );
                 }
 
@@ -386,7 +387,7 @@ trait ApparelMagicHelper
                 foreach ($fetchedDivisions as $division) {
                     Am_Division::updateOrCreate(
                         ['division_id' => $division['id']],
-                        ['name' => $division['name']]
+                        ['name' => $division['name'],'status'=>1]
                     );
                 }
 
@@ -489,6 +490,9 @@ trait ApparelMagicHelper
                             if ($this->apparelOrderAllocate($orderData)) {
                                 $orderData->allocated = 1;
                                 $orderData->save();
+                            }
+                            else{
+                            return response()->json(['status' => 'error', 'message' => $allocationResponse ?? 'Allocation failed']);
                             }
                         }
                         if ($orderData->allocated == 1) {
@@ -743,7 +747,7 @@ trait ApparelMagicHelper
     public function createApparelShipment($picktickets)
     {
         try {
-            info("create shipment");
+            // info("create shipment");
             $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
             $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
             $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
@@ -1284,7 +1288,7 @@ trait ApparelMagicHelper
                         'account_id' => $account['account_id'] ?? null,
                     ],
                     [
-                        'name' => $account['name'] ?? '',
+                        'name' => $account['description'] ?? '',
                         'status' => $account['status'] ?? 1, 
                     ]
                 );

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SettingController extends Controller
 {
@@ -13,11 +14,53 @@ class SettingController extends Controller
      */
     public function index(Request $request)
     {
+        $settingData = Setting::where('type', $request->platform)->where('status', 1)->get();
+        $selectData=[];
+        foreach ($settingData as $setting) {
+         
+            if (!empty($setting->data_source)) {
+                    $source = explode('-', $setting->data_source);
+                    if (count($source) === 3) {
+                        [$table, $fieldStr, $selectStr] = $source;
+                        $field = explode(',', $fieldStr);
+                        $select = explode(',', $selectStr);
+                        
+                        if (count($field) === 2 && (count($select) === 1 || count($select) === 2)) {
+                            $query = DB::table($table);
+                           
+                            if ($field[0] !== '*') {
+                                $query->where($field[0], $field[1]);
+                            }
+                            
+                            if (count($select) === 1) {
+                                $result = $query->pluck($select[0]);
+                            } else {
+                                $result = $query->pluck($select[0], $select[1]);
+                            }
+                            
+                           $selectData[$setting->code]=$result;
+                        
+                        } else {
+                           
+                        }
+                    } else {
+                        
+                    }
+                }
+            if (($setting->field_type == 'select' || $setting->field_type == 'multiple') && empty($setting->dataset)) {
+                $setting->dataset = json_encode([]); 
+            }
+
+        }
+
         return view('admin.settings.form')->with([
-            'settings'=>Setting::where('type', $request->platform)->where('status', 1)->get(),
-            'platform' => ucfirst($request->platform)
+            'settingData' => $settingData,
+            'dataSets'=>$selectData,
+            'platform' => ucfirst($request->platform),
         ]);
     }
+
+    
 
     /**
      * Show the form for creating a new resource.
@@ -32,7 +75,11 @@ class SettingController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        foreach ($request->except(['_token', 'platform']) as $key => $row) {
+            Setting::where('code', $key)->update(['value' => $row]);
+        }
+
+        return redirect()->route('admin.settings.index',['platform' => strtolower($request->platform)])->with(['success_message' => 'Settings Updated Successfully']);
     }
 
     /**
