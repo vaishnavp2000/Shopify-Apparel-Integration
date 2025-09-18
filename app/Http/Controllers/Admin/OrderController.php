@@ -113,6 +113,7 @@ class OrderController extends Controller
     {
         $orderId = $request->order_id;
         $sync_all = $request->sync_all;
+    
         // dd($sync_all);
 
         if ($orderId) {
@@ -159,7 +160,7 @@ class OrderController extends Controller
                 }
 
             } else {
-                ("Order not found with ID: {$orderId}");
+                    return response()->json(['message' => 'Order not found.'], 404);
             }
         }
         if ($sync_all == 1) {
