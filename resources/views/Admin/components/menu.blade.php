@@ -69,6 +69,23 @@
 
                 </a>
             </li>
+            <li>
+                <a href="{{route('admin.settings.index',['platform' => 'settings'])}}"
+                    @if (request()->fullUrl() == route('admin.settings.index', ['platform' => 'settings'])) class="active" @endif>
+                    <span class="nav-link-icon">
+                    <i class="bi bi-sliders" aria-hidden="true"></i>
+                    </span>
+                    <span>Systems</span>
+                </a>
+                <ul>
+              <li><a href="{{ route('admin.settings.index', ['platform' => 'shopify']) }}" @if (request()->fullUrl() ==
+                    route('admin.settings.index', ['platform' => 'shopify'])) class="active" @endif>Shopify</a>
+                </li>
+                <li><a href="{{ route('admin.settings.index', ['platform' => 'apparelmagic']) }}" @if (request()->fullUrl() ==
+                    route('admin.settings.index', ['platform' => 'apparelmagic'])) class="active" @endif>Apparelmagic</a>
+                </li>
+                </ul>
+             </li>
            
 
             <!-- <li>

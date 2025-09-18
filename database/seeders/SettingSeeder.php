@@ -93,7 +93,7 @@ class SettingSeeder extends Seeder
         ],
         [
             'type' => 'shopify',
-            'field_type' => 'select',
+            'field_type' => 'text',
             'dataset' => NULL,
             'data_source' => '',
             'code' => 'shopify_location',
