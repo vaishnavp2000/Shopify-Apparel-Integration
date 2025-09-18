@@ -22,7 +22,7 @@
                 </div>
             </a>
             <div class="dropdown-menu dropdown-menu-end">
-                <a href="" class="dropdown-item d-flex align-items-center">
+                <a href="{{ route('admin.profile.index') }}" class="dropdown-item d-flex align-items-center">
                     <i class="bi bi-person dropdown-item-icon"></i> Profile
                 </a>
                 <a href="javascript:;" onclick="event.preventDefault();document.getElementById('logout-form').submit();"

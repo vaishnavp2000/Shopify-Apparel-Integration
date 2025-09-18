@@ -27,6 +27,10 @@ Route::prefix('admin')->name('admin.')->namespace('App\Http\Controllers\Admin')-
         Route::post('create-credit-memo', [App\Http\Controllers\Admin\OrderController::class, 'createCreditMemo'])->name('create-credit-memo');
         Route::resource('settings', App\Http\Controllers\Admin\SettingController::class);
         Route::post('create-refund', [App\Http\Controllers\Admin\OrderController::class, 'createAmRefund'])->name('create-refund');
+        Route::resource('profile', App\Http\Controllers\Admin\ProfileController::class);
+        Route::post('update-password', [App\Http\Controllers\Admin\ProfileController::class,'update_password'])->name('update-password');
+
+
 
 
 
