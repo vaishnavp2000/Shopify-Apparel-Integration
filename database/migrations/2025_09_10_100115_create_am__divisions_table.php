@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->integer('division_id')->nullable();
             $table->string('name')->nullable();
+            $table->tinyInteger('status');
             $table->timestamps();
         });
     }

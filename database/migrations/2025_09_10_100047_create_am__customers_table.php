@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('am_customer_id')->unique();
             $table->string('name')->nullable();
+            $table->tinyInteger('status');
             $table->timestamps();
         });
     }

@@ -205,7 +205,7 @@ class OrderController extends Controller
     }
   public function createShipment(Request $request)
 {
-    // dd("createShipment");
+
     $request->validate([
         'order_ids' => 'required',
     ]);
