@@ -9,6 +9,7 @@ use App\Models\Am_Division;
 use App\Models\Am_Warehouse;
 use App\Models\Order;
 use App\Models\OrderProduct;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ReturnOrder;
@@ -813,6 +814,15 @@ trait ApparelMagicHelper
                 info("inioce genarion after shipment" . json_encode($invoice));
                 $orderData->am_invoice_id = $invoice['invoice_id'];
                 $orderData->save();
+
+                 $paymentResponse = $this->createApparelPayment($invoice,$orderData);
+                    if ($paymentResponse && !empty($paymentResponse['response'][0]['payment_id'])) {
+                        $orderData->payment_id = $paymentResponse['response'][0]['payment_id'];
+                        $orderData->save();
+                        info("Payment generated successfully: " . json_encode($paymentResponse));
+                    } else {
+                        Log::warning("Payment creation failed for Order ID: " . $orderData->id);
+                    }
             }
 
 
@@ -905,6 +915,84 @@ trait ApparelMagicHelper
         }
 
     }
+ public function createApparelPayment($invoiceData,$orderData)
+{
+    try {
+        $invoice =$invoiceData;
+
+        if (!$invoice || empty($invoice['invoice_id'])) {
+            return ['message' => 'Invalid invoice data', 'error' => true];
+        }
+
+        info("Creating ApparelMagic Payment for Invoice: " . $invoice['invoice_id']);
+
+        $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+        $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+        $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+        $time = time();
+
+        $url = $apparelUrl . '/payments';
+
+        $header = [
+            'customer_id'   => $invoice['customer_id'],
+            'amt_dr'        => (string) $invoice['balance'], 
+            'gl_acct'       => '1010',
+            'currency_id'   => $invoice['currency_id'] ?? 'USD',
+            'balance'       => 0,
+            'notes'         => $invoice['notes'] ?? 'Shopify Payment',
+            'payment_type'  => 'Shopify Payout',
+        ];
+
+        $invoices = [
+            [
+                'invoice_id'      => $invoice['invoice_id'],
+                'amount_applied'  => (string) $invoice['balance'],
+            ]
+        ];
+
+        $params = [
+            'time'  => (string) $time,
+            'token' => (string) $token,
+            "0" => [
+                'header'   => $header,
+                'invoices' => $invoices
+            ]
+        ];
+
+        $paymentResponse = $this->apparelMagicApiPostRequest($url, $params);
+
+        Log::info("ApparelMagic Payment response: " . json_encode($paymentResponse));
+
+        if (!empty($paymentResponse['response'][0]['payment_id'])) {
+            $paymentId = $paymentResponse['response'][0]['payment_id'];
+
+            Payment::updateOrCreate(
+                    [
+                        'am_order_id'      => $orderData->am_order_id ?? null,
+                        'shopify_order_id' => $orderData->shopify_order_id??null,
+                    ],
+
+                [
+                    'payment_id'   => $paymentId,
+                    'customer_id'  => $invoice['customer_id'],
+                    'payment_type' => $paymentResponse['response'][0]['payment_type'] ?? 'Shopify Payout',
+                    'amt_dr'       => $invoice['balance'],
+                    'date'         => now()->toDateString(),
+                ]
+                );
+
+           return $paymentResponse;
+        } else {
+            return ['message' => 'Payment creation failed', 'error' => true];
+        }
+
+    } catch (Exception $e) {
+        Log::error("Error creating ApparelMagic payment: " . $e->getMessage());
+        return ['message' => $e->getMessage(), 'error' => true];
+    }
+}
+
+
 
     public function cancelApparelOrder($orderId)
     {
@@ -1162,7 +1250,7 @@ trait ApparelMagicHelper
                     ],
                     [
                         'name' => $account['name'] ?? '',
-                        'status' => $account['status'] ?? 1, // default active if not provided
+                        'status' => $account['status'] ?? 1, 
                     ]
                 );
             }

@@ -13,6 +13,7 @@ class Order extends Model
         'division_id',
         'arr_accnt',
         'currency_id',
+        'payment_id',
         'shopify_order_name',
         'date',
         'date_start',
