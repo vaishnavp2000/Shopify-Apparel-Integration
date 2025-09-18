@@ -92,7 +92,9 @@
                         <th>Date</th>
                         <th>Customer</th>
                         <th>Qty</th>
-                        <th>Fulfillment Status</th>
+                         <th>Am Fulfillment Status</th>
+                        <th>Shopify Fulfillment Status</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -229,8 +231,8 @@ var $ordertable = $('#ordertb').DataTable({
     { data: 'customer_name', name: 'customer_name' },
     { data: 'qty', name: 'qty'},
     { data: 'fulfillment_status', name: 'fulfillment_status' },
-
-    
+    { data: 'shopify_fulfillment_status', name: 'shopify_fulfillment_status' },
+    { data: 'status', name: 'status' },
     {data:'action',name:'action'}
 ],
 
