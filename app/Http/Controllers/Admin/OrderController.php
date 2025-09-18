@@ -28,25 +28,56 @@ class OrderController extends Controller
             $query = Order::select('orders.*')->orderBy('id', 'asc');
 
             return DataTables::of($query)
-                ->addColumn('action', function ($order) {
-                    return '
-                        <div class="d-flex">
-                            <a href="' . route('admin.order.show', $order->id) . '" 
-                                class="btn btn-sm btn-clean btn-icon text-end" 
-                                title="Show">
-                                <i class="fa fa-eye"></i>
-                            </a>
-                             <button class="btn btn-sm btn-primary fulfil-order-btn me-1" 
-                                data-id="' . $order->id . '">
-                              Fulfill
-                            </button>
-                             <button class="btn btn-sm btn-danger cancel_order_btn" 
-                                data-id="' . $order->id . '">
-                              Cancel Order
-                            </button>
-                        </div>';
-                })
-                ->rawColumns(['action'])
+            ->addColumn('status', function ($order) {
+                if ($order->is_cancelled == 1) {
+                    return '<span class="badge bg-danger">Cancelled</span>';
+                }
+
+                if ($order->allocated == 1 && empty($order->pick_ticket_id)) {
+                    return '<span class="badge bg-info">Allocated (No Ticket)</span>';
+                }
+
+                if ($order->allocated == 1 && !empty($order->pick_ticket_id) && empty($order->shipment_id)) {
+                    return '<span class="badge bg-primary">Pick Ticket Created</span>';
+                }
+
+                if ($order->allocated == 1 && !empty($order->pick_ticket_id) && !empty($order->shipment_id)) {
+                    return '<span class="badge bg-success">Fulfilled</span>';
+                }
+
+                 return '<span class="badge bg-warning">Pending</span>';
+            })
+            ->addColumn('action', function ($order) {
+            $actions = '<div class="d-flex">';
+
+            $actions .= '
+                <a href="' . route('admin.order.show', $order->id) . '" 
+                    class="btn btn-sm btn-clean btn-icon text-end" 
+                    title="Show">
+                    <i class="fa fa-eye"></i>
+                </a>';
+            if (!empty($order->shipment_id)) {
+
+            $actions .= '
+                <button class="btn btn-sm btn-primary fulfil-order-btn me-1" 
+                    data-id="' . $order->id . '">
+                Fulfill
+                </button>';
+            }
+
+            if ($order->is_cancelled != 1 && empty($order->shipment_id)) {
+                $actions .= '
+                    <button class="btn btn-sm btn-danger cancel_order_btn" 
+                        data-id="' . $order->id . '">
+                    Cancel Order
+                    </button>';
+            }
+
+            $actions .= '</div>';
+
+            return $actions;
+    })
+                ->rawColumns(['action','status'])
                 ->make(true);
         }
 
@@ -104,6 +135,15 @@ class OrderController extends Controller
                             if ($this->apparelOrderAllocate($orderData)) {
                                 $orderData->allocated = 1;
                                 $orderData->save();
+                            }
+                            else{
+                                $pickticket=$this->getApparelPickTicketsByOrderId($orderData->am_order_id);
+                                if ($pickticket && isset($pickticket['pick_ticket_id'])) {
+                                    $orderData->allocated = 1;
+                                    $orderData->pick_ticket_id=$pickticket['pick_ticket_id'];
+                                    $orderData->save();
+
+                                }
                             }
                         }
                         if ($orderData->allocated == 1) {
