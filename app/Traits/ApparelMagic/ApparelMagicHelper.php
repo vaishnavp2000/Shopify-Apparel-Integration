@@ -991,6 +991,41 @@ trait ApparelMagicHelper
         return ['message' => $e->getMessage(), 'error' => true];
     }
 }
+    public function  createApparelRefund($order){
+        try{
+        $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+        $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+        $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+        $time = time();
+        $am_order=ReturnOrder::where('am_order_id',$order->am_order_id)->first();
+        $credit_memo_id=$am_order->credit_memo_id;
+        info("creadit_memo_id".json_encode($credit_memo_id));
+        $url = $apparelUrl . '/credit_memos/' . $credit_memo_id . '/refund';
+    
+        $params = [
+            'time' => (string) $time,
+            'token' => (string) $token,
+            'gl_acct' => "1000",
+            'amount' => "0",
+        ];
+        $orderrefund = $this->apparelMagicApiPutRequest($url, $params);
+        $orderData=Order::where('am_order_id',$order->am_order_id)->first();
+        info("Refund order response" . json_encode($orderrefund));
+        if (!empty($orderrefund['response']) && is_array($orderrefund['response'])) {
+            $orderData->is_refund=1;
+            $orderData->save();
+        }
+    }
+        catch(Exception $e)
+        {
+            Log::error('Error in createAmRefund: ' . $e->getMessage());
+            return [
+                'status' => 'failure',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+   
 
 
 

@@ -28,19 +28,6 @@ class OrderController extends Controller
             $query = Order::select('orders.*')->orderBy('id', 'asc');
 
             return DataTables::of($query)
-                ->addColumn('confirmation', function ($order) {
-                     if (empty($order->shipment_id)&&$order->is_cancelled == 0) {
-                    return '
-                        <div class="d-flex">
-                             <button class="btn btn-sm btn-info cancel_order_btn" 
-                                data-id="' . $order->id . '">
-                              Cancel Order
-                            </button>
-                        </div>';
-                     }
-                      return '';
-                })
-                
                 ->addColumn('action', function ($order) {
                     return '
                         <div class="d-flex">
@@ -49,13 +36,17 @@ class OrderController extends Controller
                                 title="Show">
                                 <i class="fa fa-eye"></i>
                             </a>
-                             <button class="btn btn-sm btn-primary fulfil-order-btn" 
+                             <button class="btn btn-sm btn-primary fulfil-order-btn me-1" 
                                 data-id="' . $order->id . '">
-                              Fulfill Order
+                              Fulfill
+                            </button>
+                             <button class="btn btn-sm btn-danger cancel_order_btn" 
+                                data-id="' . $order->id . '">
+                              Cancel Order
                             </button>
                         </div>';
                 })
-                ->rawColumns(['action', 'confirmation'])
+                ->rawColumns(['action'])
                 ->make(true);
         }
 
@@ -360,6 +351,23 @@ public function createCreditMemo(Request $request){
                 'message' => 'Order not found.'
             ], 404);
         }
+    }
+    public function createAmRefund(Request $request){
+    $orderId = $request->order_id;
+      $orderData = Order::where('id', $orderId)->first();
+       if ($orderData) {
+            $this->createApparelRefund($orderData);
+            return response()->json([
+                'success' => true,
+                'message' => 'Created Credit Memo processed successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found.'
+            ], 404);
+        }
+
     }
 
 

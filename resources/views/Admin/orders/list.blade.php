@@ -93,7 +93,6 @@
                         <th>Customer</th>
                         <th>Qty</th>
                         <th>Fulfillment Status</th>
-                        <th>Confirmation</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -230,9 +229,7 @@ var $ordertable = $('#ordertb').DataTable({
     { data: 'customer_name', name: 'customer_name' },
     { data: 'qty', name: 'qty'},
     { data: 'fulfillment_status', name: 'fulfillment_status' },
-    {
-        data:'confirmation',name:'confirmation'
-    },
+
     
     {data:'action',name:'action'}
 ],
@@ -412,7 +409,7 @@ $(document).ready(function() {
                  Swal.fire({
                         icon: 'success',
                         title: 'Success!',
-                        text: response.message || 'Shipment Compleetd Successfully.',
+                        text: response.message || 'Shipment Completed Successfully.',
                 });
             },
             error: function(xhr) {

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
            $table->string('payment_id')->after('am_invoice_id')->nullable();
+           $table->string('is_refund')->default('0')->after('payment_id'); 
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->dropColumn('payment_id');
+            $table->dropColumn('is_refund');
         });
     }
 };
