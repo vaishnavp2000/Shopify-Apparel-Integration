@@ -233,6 +233,7 @@ var $ordertable = $('#ordertb').DataTable({
     {
         data:'confirmation',name:'confirmation'
     },
+    
     {data:'action',name:'action'}
 ],
 

@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\ReturnOrder;
 use App\Models\Setting;
 use App\Models\SizeRange;
 use App\Traits\ApiHelper;
@@ -59,7 +60,7 @@ trait ApparelMagicHelper
                     'active' => '1',
                 ];
             }
-            info("skusss", $skus);
+            // info("skusss", $skus);
             $params['sku'] = $skus;
             $response = $this->apparelMagicApiPostRequest($url, $params);
             info("amProducts--1" . json_encode($response));
@@ -616,6 +617,7 @@ trait ApparelMagicHelper
                         'am_order_id' => $orderItem['order_id'] ?? null,
                         'am_order_item_id' => $orderItem['id'] ?? null,
                         'product_id' => $orderItem['product_id'] ?? null,
+                        'sku_id' => $orderItem['sku_id'] ?? null,
                         'sku_alt' => $orderItem['sku_alt'] ?? null,
                         'upc' => $orderItem['upc'] ?? null,
                         'style_number' => $orderItem['style_number'] ?? null,
@@ -639,7 +641,7 @@ trait ApparelMagicHelper
     }
     public function apparelOrderAllocate($order)
     {
-        info("apparelOrderallocate".json_encode($order));
+        info("apparelOrderallocate" . json_encode($order));
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
         $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
         $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
@@ -663,12 +665,12 @@ trait ApparelMagicHelper
         if (empty($items)) {
             return false;
         }
-        info("item_ids".json_encode($itemCollection));
+        info("item_ids" . json_encode($itemCollection));
         $request['item_ids'] = $itemCollection;
         $params['item_ids'] = $request['item_ids'];
         info(json_encode($params));
         $allocate = $this->apparelMagicApiPutRequest($url, $params);
-         info("allocate response".json_encode($allocate));
+        info("allocate response" . json_encode($allocate));
         if (!empty($allocate['response']) && !empty($allocate['response'])) {
             return true;
         } else {
@@ -717,7 +719,7 @@ trait ApparelMagicHelper
 
     public function getApparelPickTickets($pickticket_id)
     {
-        info("getApparelPickTickets".json_encode($pickticket_id));
+        info("getApparelPickTickets" . json_encode($pickticket_id));
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
         $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
         $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
@@ -926,6 +928,160 @@ trait ApparelMagicHelper
             return [];
         }
     }
+    public function returnApparelOrder($order, $reason)
+    {
+        try {
+            if (!$order) {
+                info("Order not found");
+                throw new \Exception("Order not found");
+            }
+
+            $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+            $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+            $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+            $time = time();
+
+           $header = []; 
+           $header['customer_id'] = 1000; 
+           $header['division_id'] = 1016; 
+           $header['ar_acct'] = 1000; 
+           $header['currency_id'] = 1000; 
+           $header['warehouse_id'] = 1006; 
+           $header['date']=Carbon::parse($order->created_at)->format('m/d/Y'); 
+           $header['date_due' ] = Carbon::parse($order->created_at)->format('m/d/Y'); 
+           $header['notes' ]=$reason; 
+           $header['override_tax_amount']=1;
+           $header['customer_po'] = $order->shopify_order_id ?? '';
+
+            info("Creating Apparel Return with header: " . json_encode($header));
+
+            $items = [];
+            $amOrderData = $this->getAmOrderById($order->am_order_id);
+
+            if (!empty($amOrderData['response'][0]['order_items'])) {
+                foreach ($amOrderData['response'][0]['order_items'] as $amOrderItem) {
+                    $items[] = [
+                        'sku_id' => $amOrderItem['sku_id'],
+                        'qty' => $amOrderItem['qty'],
+                        'unit_cost' => $amOrderItem['unit_price'],
+                        'is_taxable' => 0,
+                        'is_damaged' => 0,
+                        'notes' => $reason,
+                    ];
+                }
+            }
+
+            $params = [
+                'time' => (string) $time,
+                'token' => (string) $token,
+                'header' => $header,
+                'items' => $items,
+            ];
+
+            info("Return Authorization Payload: " . json_encode($params));
+
+            $url = $apparelUrl . '/return_authorizations';
+            $response = $this->apparelMagicApiPostRequest($url, $params);
+
+            info("Order Return Response: " . json_encode($response));
+
+            if (!empty($response['response'][0]['return_authorization_id'])) {
+                info("authorsation id".json_encode($response['response'][0]['return_authorization_id']));
+                ReturnOrder::updateOrCreate(
+                    [
+                        'shopify_order_id' => $order->shopify_order_id,
+                        'am_order_id' => $order->am_order_id,
+                    ],
+                    [
+                        'return_authorization_id' => $response['response'][0]['return_authorization_id'],
+                    ]
+                );
+            }
+
+            return $response;
+
+        } catch (\Exception $e) {
+            info("Error in returnApparelOrder: " . $e->getMessage());
+            throw $e;
+        }
+    }
+   public function createApparelCreditMemo($order)
+    {
+    try {
+        Log::info("Starting createApparelCreditMemo");
+
+        if (!$order) {
+            Log::error("Order not found");
+            throw new Exception("Order not found");
+        }
+
+        $settings   = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+        $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+        $token      = $settings->firstWhere('code', 'apparelmagic_token')->value;
+        $time       = time();
+
+        $header = [];
+        $header['customer_id']        = 1000;
+        $header['division_id']        = 1016;
+        $header['ar_acct']            = 1000;
+        $header['warehouse_id']       = 1006;
+        $header['currency_id']        = 1000;
+        $header['override_tax_amount']= 1;
+        $header['customer_po']        = $order->shopify_order_id ?? '';
+        $header['date']               = Carbon::parse($order->created_at)->format('m/d/Y');
+        $header['date_due']           = Carbon::parse($order->created_at)->format('m/d/Y');
+
+        $items = [];
+        $amOrderData = $this->getAmOrderById($order->am_order_id);
+        // Log::info("AM Order Response: " . json_encode($amResponse));
+
+        if (!empty($amOrderData['response'][0]['order_items'])) {
+            foreach ($amOrderData['response'][0]['order_items'] as $amOrderItem) {
+                $items[] = [
+                    'sku_id'    => $amOrderItem['sku_id'],
+                    'qty'       => $amOrderItem['qty'],
+                    'unit_cost' => $amOrderItem['unit_price'] ?? 0,
+                    'is_taxable'=> 1,
+                ];
+            }
+        } else {
+            throw new Exception("No order items found in AM response for order ID: " . $order->am_order_id);
+        }
+
+        $params = [];
+        $params['time']   = (string) $time;
+        $params['token']  = (string) $token;
+        $params['header'] = $header;
+        $params['items']  = $items;
+
+        Log::info("Credit Memo Payload: " . json_encode($params));
+
+        $url = $apparelUrl . '/credit_memos';
+        $response = $this->apparelMagicApiPostRequest($url, $params);
+
+        Log::info("Credit Memo Response: " . json_encode($response));
+
+        if (!empty($response['response'][0]['credit_memo_id'])) {
+            ReturnOrder::updateOrCreate(
+                [
+                    'shopify_order_id' => $order->shopify_order_id,
+                    'am_order_id'      => $order->am_order_id,
+                ],
+                [
+                    'credit_memo_id'   => $response['response'][0]['credit_memo_id'],
+                ]
+            );
+        }
+
+        return $response;
+
+    } catch (Exception $e) {
+        Log::error("Error in createApparelCreditMemo: " . $e->getMessage());
+        throw $e;
+    }
+}
+
+
 
 
 
@@ -981,8 +1137,8 @@ trait ApparelMagicHelper
         return $response;
     }
 
-    
-    
+
+
 
     // protected function getShipmentByOrder($order)
     // {

@@ -23,6 +23,10 @@ Route::prefix('admin')->name('admin.')->namespace('App\Http\Controllers\Admin')-
         Route::post('create-shipment', [App\Http\Controllers\Admin\OrderController::class, 'createShipment'])->name('create-shipment');
         Route::post('cancel-order', [App\Http\Controllers\Admin\OrderController::class, 'cancelOrder'])->name('cancel-order');
         Route::post('fulfill-order', [App\Http\Controllers\Admin\OrderController::class, 'fulfilOrder'])->name('fulfil-order');
+        Route::post('order-return', [App\Http\Controllers\Admin\OrderController::class, 'processReturn'])->name('return-order');
+        Route::post('create-credit-memo', [App\Http\Controllers\Admin\OrderController::class, 'createCreditMemo'])->name('create-credit-memo');
+
+
 
         
 

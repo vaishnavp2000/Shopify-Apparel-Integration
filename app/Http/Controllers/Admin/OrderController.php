@@ -40,6 +40,7 @@ class OrderController extends Controller
                      }
                       return '';
                 })
+                
                 ->addColumn('action', function ($order) {
                     return '
                         <div class="d-flex">
@@ -164,6 +165,27 @@ class OrderController extends Controller
             }
         }
     }
+    public function processReturn(Request $request){
+        // dd($request->all());
+        $orderId = $request->order_id;
+        $reason = $request->reason;
+
+        $orderData = Order::where('id', $orderId)->first();
+        // dd($orderData);
+
+        if ($orderData) {
+            $this->returnApparelOrder($orderData, $reason);
+            return response()->json([
+                'success' => true,
+                'message' => 'Return processed successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found.'
+            ], 404);
+        }
+}
 
     /**
      * Show the form for creating a new resource.
@@ -322,7 +344,23 @@ public function fulfilOrder(Request $request)
         ], 500);
     }
 }
-
+public function createCreditMemo(Request $request){
+    // dd( $request->all());
+     $orderId = $request->order_id;
+     $orderData = Order::where('id', $orderId)->first();
+     if ($orderData) {
+            $this->createApparelCreditMemo($orderData);
+            return response()->json([
+                'success' => true,
+                'message' => 'Created Credit Memo processed successfully.'
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found.'
+            ], 404);
+        }
+    }
 
 
     /**

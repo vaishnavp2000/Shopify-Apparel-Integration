@@ -127,7 +127,122 @@
                     </div>
                 </div>
             </div>
+             <div class="col-12 mt-3 text-end">
+            <button class="btn btn-danger returnOrderBtn" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
+                Return Order
+            </button>
+            <button type="button" class="btn btn-warning create-credit-memo" data-order-id="{{ $order->id }}">Create Credit Memo
+            </button>
+        </div>
         </div>
 
     </div>
+
+
+    <!-- Return modal -->
+     <div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="returnOrderForm" method="POST">
+            @csrf
+            <input type="hidden" name="order_id"  id="orderId" value="{{ $order->id }}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnOrderModalLabel">Return Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="returnReason" class="form-label">Reason for Return</label>
+                        <textarea name="return_reason" id="returnReason" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger submitReturnBtn">Submit Return</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
+@section('script')
+<script>
+$(document).ready(function() {
+
+    // Submit the return request via AJAX
+    $('.submitReturnBtn').click(function() {
+        let orderId = $('#orderId').val();
+        let reason = $('#returnReason').val().trim();
+
+        if(reason === '') {
+            alert('Please enter a reason.');
+            return;
+        }
+
+        $.ajax({
+            url: "{{ route('admin.return-order') }}", 
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}', 
+                order_id: orderId,
+                reason: reason
+            },
+            success: function(response) {
+                $('#returnOrderModal').modal('hide');
+                 Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message || 'Return request submitted successfully.',
+                });
+                
+            },
+            error: function(xhr, status, error) {
+                // console.error(error);
+                 Swal.fire({
+                        icon: 'error',
+                        title: 'error!',
+                        text: response.message || 'Failed to submit return request.',
+                });
+                // alert('Failed to submit return request.');
+            }
+        });
+    });
+});
+$(document).on('click', '.create-credit-memo', function () {
+    let orderId = $(this).data('order-id');
+    let btn = $(this);
+
+    $.ajax({
+        url: "{{ route('admin.create-credit-memo')}}",
+        method: "POST",
+        data: {
+            order_id: orderId,
+            _token: "{{ csrf_token() }}"
+        },
+        beforeSend: function () {
+            btn.prop('disabled', true).text('Creating...');
+        },
+        success: function (response) {
+              Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message ||'Credit Memo Created',
+                });
+         
+        },
+        error: function (xhr) {
+            Swal.fire({
+                    icon: 'error',
+                    title: 'error!',
+                    text: response.message || 'Failed to create Credit Memo.',
+            });
+        },
+          complete: function () {
+            btn.prop('disabled', false).text('Create Credit Memo');
+        }
+    });
+});
+
+</script>
+
 @endsection
