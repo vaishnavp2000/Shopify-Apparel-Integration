@@ -322,7 +322,9 @@ trait ApparelMagicHelper
                 foreach ($fetchedCustomers as $cust) {
                     Am_Customer::updateOrCreate(
                         ['am_customer_id' => $cust['customer_id']],
-                        ['name' => $cust['customer_name'],'status'=>1
+                        [
+                            'name' => $cust['customer_name'],
+                            'status' => 1
                         ]
                     );
                 }
@@ -387,7 +389,7 @@ trait ApparelMagicHelper
                 foreach ($fetchedDivisions as $division) {
                     Am_Division::updateOrCreate(
                         ['division_id' => $division['id']],
-                        ['name' => $division['name'],'status'=>1]
+                        ['name' => $division['name'], 'status' => 1]
                     );
                 }
 
@@ -490,9 +492,8 @@ trait ApparelMagicHelper
                             if ($this->apparelOrderAllocate($orderData)) {
                                 $orderData->allocated = 1;
                                 $orderData->save();
-                            }
-                            else{
-                            return response()->json(['status' => 'error', 'message' => $allocationResponse ?? 'Allocation failed']);
+                            } else {
+                                return response()->json(['status' => 'error', 'message' => $allocationResponse ?? 'Allocation failed']);
                             }
                         }
                         if ($orderData->allocated == 1) {
@@ -745,7 +746,7 @@ trait ApparelMagicHelper
 
     }
 
-     public function getApparelPickTicketsByOrderId($orderId)
+    public function getApparelPickTicketsByOrderId($orderId)
     {
         info("getApparelPickTickets" . json_encode($orderId));
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
@@ -842,14 +843,14 @@ trait ApparelMagicHelper
                 $orderData->am_invoice_id = $invoice['invoice_id'];
                 $orderData->save();
 
-                 $paymentResponse = $this->createApparelPayment($invoice,$orderData);
-                    if ($paymentResponse && !empty($paymentResponse['response'][0]['payment_id'])) {
-                        $orderData->payment_id = $paymentResponse['response'][0]['payment_id'];
-                        $orderData->save();
-                        info("Payment generated successfully: " . json_encode($paymentResponse));
-                    } else {
-                        Log::warning("Payment creation failed for Order ID: " . $orderData->id);
-                    }
+                $paymentResponse = $this->createApparelPayment($invoice, $orderData);
+                if ($paymentResponse && !empty($paymentResponse['response'][0]['payment_id'])) {
+                    $orderData->payment_id = $paymentResponse['response'][0]['payment_id'];
+                    $orderData->save();
+                    info("Payment generated successfully: " . json_encode($paymentResponse));
+                } else {
+                    Log::warning("Payment creation failed for Order ID: " . $orderData->id);
+                }
             }
 
 
@@ -942,109 +943,135 @@ trait ApparelMagicHelper
         }
 
     }
- public function createApparelPayment($invoiceData,$orderData)
-{
-    try {
-        $invoice =$invoiceData;
+    public function createApparelPayment($invoiceData, $orderData)
+    {
+        try {
+            $invoice = $invoiceData;
 
-        if (!$invoice || empty($invoice['invoice_id'])) {
-            return ['message' => 'Invalid invoice data', 'error' => true];
-        }
+            if (!$invoice || empty($invoice['invoice_id'])) {
+                return ['message' => 'Invalid invoice data', 'error' => true];
+            }
 
-        info("Creating ApparelMagic Payment for Invoice: " . $invoice['invoice_id']);
+            info("Creating ApparelMagic Payment for Invoice: " . $invoice['invoice_id']);
 
-        $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
-        $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
-        $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
-        $time = time();
+            $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+            $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+            $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+            $time = time();
 
-        $url = $apparelUrl . '/payments';
+            $url = $apparelUrl . '/payments';
 
-        $header = [
-            'customer_id'   => $invoice['customer_id'],
-            'amt_dr'        => (string) $invoice['balance'], 
-            'gl_acct'       => '1010',
-            'currency_id'   => $invoice['currency_id'] ?? 'USD',
-            'balance'       => 0,
-            'notes'         => $invoice['notes'] ?? 'Shopify Payment',
-            'payment_type'  => 'Shopify Payout',
-        ];
+            $header = [
+                'customer_id' => $invoice['customer_id'],
+                'amt_dr' => (string) $invoice['balance'],
+                'gl_acct' => '1010',
+                'currency_id' => $invoice['currency_id'] ?? 'USD',
+                'balance' => 0,
+                'notes' => $invoice['notes'] ?? 'Shopify Payment',
+                'payment_type' => 'Shopify Payout',
+            ];
 
-        $invoices = [
-            [
-                'invoice_id'      => $invoice['invoice_id'],
-                'amount_applied'  => (string) $invoice['balance'],
-            ]
-        ];
+            $invoices = [
+                [
+                    'invoice_id' => $invoice['invoice_id'],
+                    'amount_applied' => (string) $invoice['balance'],
+                ]
+            ];
 
-        $params = [
-            'time'  => (string) $time,
-            'token' => (string) $token,
-            "0" => [
-                'header'   => $header,
-                'invoices' => $invoices
-            ]
-        ];
+            $params = [
+                'time' => (string) $time,
+                'token' => (string) $token,
+                "0" => [
+                    'header' => $header,
+                    'invoices' => $invoices
+                ]
+            ];
 
-        $paymentResponse = $this->apparelMagicApiPostRequest($url, $params);
+            $paymentResponse = $this->apparelMagicApiPostRequest($url, $params);
 
-        Log::info("ApparelMagic Payment response: " . json_encode($paymentResponse));
+            Log::info("ApparelMagic Payment response: " . json_encode($paymentResponse));
 
-        if (!empty($paymentResponse['response'][0]['payment_id'])) {
-            $paymentId = $paymentResponse['response'][0]['payment_id'];
+            if (!empty($paymentResponse['response'][0]['payment_id'])) {
+                $paymentId = $paymentResponse['response'][0]['payment_id'];
 
-            Payment::updateOrCreate(
+                Payment::updateOrCreate(
                     [
-                        'am_order_id'      => $orderData->am_order_id ?? null,
-                        'shopify_order_id' => $orderData->shopify_order_id??null,
+                        'am_order_id' => $orderData->am_order_id ?? null,
+                        'shopify_order_id' => $orderData->shopify_order_id ?? null,
                     ],
 
-                [
-                    'payment_id'   => $paymentId,
-                    'customer_id'  => $invoice['customer_id'],
-                    'payment_type' => $paymentResponse['response'][0]['payment_type'] ?? 'Shopify Payout',
-                    'amt_dr'       => $invoice['balance'],
-                    'date'         => now()->toDateString(),
-                ]
+                    [
+                        'payment_id' => $paymentId,
+                        'customer_id' => $invoice['customer_id'],
+                        'payment_type' => $paymentResponse['response'][0]['payment_type'] ?? 'Shopify Payout',
+                        'amt_dr' => $invoice['balance'],
+                        'date' => now()->toDateString(),
+                    ]
                 );
 
-           return $paymentResponse;
-        } else {
-            return ['message' => 'Payment creation failed', 'error' => true];
+                return $paymentResponse;
+            } else {
+                return ['message' => 'Payment creation failed', 'error' => true];
+            }
+
+        } catch (Exception $e) {
+            Log::error("Error creating ApparelMagic payment: " . $e->getMessage());
+            return ['message' => $e->getMessage(), 'error' => true];
+        }
+    }
+    public function getApparelAPayment($invoice)
+    {
+        try {
+            $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+            $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+            $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+            $time = time();
+            $url=$apparelUrl.'/payments';
+            $invoice_id=$invoice['invoice_id'];
+            $params=[
+                'time'=>(string)$time,
+                'token'=>(string)$token,
+                'invoice_id'=>$invoice_id
+            ];
+            $response=$this->apparelMagicApiRequest($url,$params);
+            
+
+        } catch (Exception $e) {
+            Log::error('Error in createAmRefund: ' . $e->getMessage());
+            return [
+                'status' => 'failure',
+                'message' => $e->getMessage()
+            ];
         }
 
-    } catch (Exception $e) {
-        Log::error("Error creating ApparelMagic payment: " . $e->getMessage());
-        return ['message' => $e->getMessage(), 'error' => true];
+
     }
-}
-    public function  createApparelRefund($order){
-        try{
-        $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
-        $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
-        $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
-        $time = time();
-        $am_order=ReturnOrder::where('am_order_id',$order->am_order_id)->first();
-        $credit_memo_id=$am_order->credit_memo_id;
-        info("creadit_memo_id".json_encode($credit_memo_id));
-        $url = $apparelUrl . '/credit_memos/' . $credit_memo_id . '/refund';
-    
-        $params = [
-            'time' => (string) $time,
-            'token' => (string) $token,
-            'gl_acct' => "1000",
-            'amount' => "0",
-        ];
-        $orderrefund = $this->apparelMagicApiPutRequest($url, $params);
-        $orderData=Order::where('am_order_id',$order->am_order_id)->first();
-        info("Refund order response" . json_encode($orderrefund));
-        if (!empty($orderrefund['response']) && is_array($orderrefund['response'])) {
-            $orderData->is_refund=1;
-            $orderData->save();
-        }
-    }
-        catch(Exception $e)
-        {
+    public function createApparelRefund($order)
+    {
+        try {
+            $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
+            $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+            $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
+            $time = time();
+            $am_order = ReturnOrder::where('am_order_id', $order->am_order_id)->first();
+            $credit_memo_id = $am_order->credit_memo_id;
+            info("creadit_memo_id" . json_encode($credit_memo_id));
+            $url = $apparelUrl . '/credit_memos/' . $credit_memo_id . '/refund';
+
+            $params = [
+                'time' => (string) $time,
+                'token' => (string) $token,
+                'gl_acct' => "1000",
+                'amount' => "0",
+            ];
+            $orderrefund = $this->apparelMagicApiPutRequest($url, $params);
+            $orderData = Order::where('am_order_id', $order->am_order_id)->first();
+            info("Refund order response" . json_encode($orderrefund));
+            if (!empty($orderrefund['response']) && is_array($orderrefund['response'])) {
+                $orderData->is_refund = 1;
+                $orderData->save();
+            }
+        } catch (Exception $e) {
             Log::error('Error in createAmRefund: ' . $e->getMessage());
             return [
                 'status' => 'failure',
@@ -1052,7 +1079,7 @@ trait ApparelMagicHelper
             ];
         }
     }
-   
+
 
 
 
@@ -1312,7 +1339,7 @@ trait ApparelMagicHelper
                     ],
                     [
                         'name' => $account['description'] ?? '',
-                        'status' => $account['status'] ?? 1, 
+                        'status' => $account['status'] ?? 1,
                     ]
                 );
             }
@@ -1321,42 +1348,6 @@ trait ApparelMagicHelper
 
         return [];
     }
-
-
-
-    // protected function getShipmentByOrder($order)
-    // {
-    // try {
-    //     $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
-    //     $apparelUrl = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
-    //     $token = $settings->firstWhere('code', 'apparelmagic_token')->value;
-    //     $time = time();
-    //     $url = $apparelUrl . '/shipments';
-
-    //     $params = [
-    //         'time' => (string) $time,
-    //         'token' => (string) $token,
-
-    //     ];
-
-    //     $response = $this->apparelMagicApiRequest($url, $params);
-
-    //     if (!empty($response['response']) && is_array($response['response'])) {
-    //         foreach ($response['response'] as $shipment) {
-    //             if (!empty($shipment['boxes']) && is_array($shipment['boxes'])) {
-    //                 foreach ($shipment['boxes'] as $box) {
-    //                     if (!empty($box['order_id']) && $box['order_id'] == $order->id) {
-    //                         return $shipment; 
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return null; // No shipment found for this order
-    // } catch (\Exception $e) {
-    //     return null;
-    // }
-    // }
 
 
 }

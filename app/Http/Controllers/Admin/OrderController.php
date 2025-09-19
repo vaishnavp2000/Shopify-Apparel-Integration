@@ -62,14 +62,13 @@ class OrderController extends Controller
                     title="Show">
                     <i class="fa fa-eye"></i>
                 </a>';
-            if (!empty($order->shipment_id)) {
-
-            $actions .= '
-                <button class="btn btn-sm btn-primary fulfil-order-btn me-1" 
-                    data-id="' . $order->id . '">
-                Fulfill
-                </button>';
-            }
+                if (!empty($order->shipment_id) && strtolower($order->shopify_fulfillment_status) != 'fulfilled'){
+                    $actions .= '
+                        <button class="btn btn-sm btn-primary fulfil-order-btn me-1" 
+                            data-id="' . $order->id . '">
+                        Fulfill
+                        </button>';
+                    }
 
             if ($order->is_cancelled != 1 && empty($order->shipment_id)) {
                 $actions .= '
@@ -246,7 +245,7 @@ class OrderController extends Controller
      */
     public function show(string $id)
     {
-        $order = Order::with('orderProducts')->find($id);
+        $order = Order::with('orderProducts','returnOrder')->find($id);
 
         return view('admin.orders.detail', compact('order'));
     }

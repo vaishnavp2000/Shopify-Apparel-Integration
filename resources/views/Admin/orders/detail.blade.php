@@ -195,13 +195,18 @@
                 </div>
             </div>
             <div class="col-12 mt-3 text-end">
+               @if(strtolower($order->shopify_fullfiment_status) === 'fulfilled'&& !empty($order->shipment_id) && empty(optional($order->returnOrder)->return_authorization_id)&& !empty($order->payment_id))
                 <button class="btn btn-danger returnOrderBtn" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
                     Return Order
                 </button>
+                @endif
+
+                @if(optional($order->returnOrder)->return_authorization_id)
                 <button type="button" class="btn btn-warning create-credit-memo" data-order-id="{{ $order->id }}">Create
                     Credit Memo
                 </button>
-                @if($order->is_refund == 0 && !empty($order->payment_id))
+                @endif
+                @if($order->is_refund == 0 && !empty($order->payment_id)&& !empty(optional($order->returnOrder)->return_authorization_id))
                     <button type="button" class="btn btn-success refund-order-btn" data-order-id="{{ $order->id }}">
                         Refund Order
                     </button>
