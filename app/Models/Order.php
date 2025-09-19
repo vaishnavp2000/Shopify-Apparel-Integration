@@ -63,4 +63,8 @@ class Order extends Model
     {
         return $this->hasMany(OrderProduct::class, 'shopify_order_id','shopify_order_id');
     }
+    public function returnOrder()
+    {
+        return $this->hasOne(ReturnOrder::class, 'am_order_id', 'am_order_id');
+    }
 }
