@@ -13,8 +13,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
-
-
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -25,7 +24,8 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Order::select('orders.*')->orderBy('id', 'asc');
+            $query = Order::with('returnOrder')->select('orders.*')->orderBy('id', 'asc')->get();
+
 
             return DataTables::of($query)
             ->addColumn('status', function ($order) {
@@ -42,6 +42,12 @@ class OrderController extends Controller
                 }
 
                 if ($order->allocated == 1 && !empty($order->pick_ticket_id) && !empty($order->shipment_id)) {
+                    if (!empty(optional($order->returnOrder)->return_authorization_id)) {
+                         if ($order->is_refund == 1) {
+                             return '<span class="badge bg-warning">Refunded</span>';
+                         }
+                         return '<span class="badge bg-secondary">Return Order</span>';
+                    }
                     return '<span class="badge bg-success">Fulfilled</span>';
                 }
 
