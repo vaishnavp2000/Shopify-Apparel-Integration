@@ -1320,13 +1320,7 @@ trait ApparelMagicHelper
             throw $e;
         }
     }
-
-
-
-
-
-
-    public function getApparelOrder($orderId)
+     public function getApparelOrder($orderId)
     {
         // info("orderid".json_encode($orderId));
         $settings = Setting::where(['type' => 'apparelmagic', 'status' => 1])->get();
