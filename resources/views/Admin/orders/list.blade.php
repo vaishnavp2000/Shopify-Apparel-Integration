@@ -415,11 +415,19 @@ $(document).ready(function() {
                 });
             },
             error: function(xhr) {
-                alert('Error creating shipment.');
+                $('#shipmentModal').modal('hide');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: (xhr.responseJSON && xhr.responseJSON.message) 
+                        ? xhr.responseJSON.message 
+                        : 'Failed to Create Shipment.',
+                });
             }
         });
     });
 });
+
 
 $(document).ready(function() {
     $(document).on('click', '.fulfil-order-btn', function() {

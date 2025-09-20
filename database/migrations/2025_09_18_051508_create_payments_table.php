@@ -16,9 +16,12 @@ return new class extends Migration
             $table->string('am_order_id')->nullable();
             $table->string('shopify_order_id')->nullable();
             $table->string('payment_id')->nullable();
-            $table->string('customer_id');
-            $table->string('payment_type');
-            $table->decimal('amt_dr', 12, 2);
+            $table->string('customer_id')->nullable();
+            $table->string('transaction_id')->nullable();
+            $table->string('reference')->nullable();
+            $table->string('gl_acct')->nullable();
+            $table->string('payment_type')->nullable();
+            $table->decimal('amt_cr', 12, 2);
             $table->string('date')->nullable();
             $table->timestamps();
         });

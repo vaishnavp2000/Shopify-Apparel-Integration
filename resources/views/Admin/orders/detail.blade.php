@@ -24,38 +24,38 @@
                     <div class="card-body">
                         <div class="mb-5 d-flex align-items-center justify-content-between">
                             <span>Order No : <a href="#">{{ $order->shopify_order_name }}</a></span>
-                          @php
-                            $statusText = '';
-                            $statusClass = '';
+                            @php
+                                $statusText = '';
+                                $statusClass = '';
 
-                            if($order->is_cancelled) {
-                                $statusText = 'Cancelled';
-                                $statusClass = 'bg-danger';
-                            } elseif($order->is_refund) {
-                                $statusText = 'Refunded';
-                                $statusClass = 'bg-warning';
-                            } elseif($order->allocated == 0) {
-                                $statusText = 'Pending Allocation';
-                                $statusClass = 'bg-secondary';
-                            } elseif($order->allocated == 1 && empty($order->pick_ticket_id)) {
-                                $statusText = 'Allocated';
-                                $statusClass = 'bg-info';
-                            } elseif(!empty($order->pick_ticket_id) && empty($order->shipment_id)) {
-                                $statusText = 'Pick Ticket Generated';
-                                $statusClass = 'bg-primary';
-                            } elseif(!empty($order->shipment_id) && $order->fulfillment_status != 'fulfilled') {
-                                $statusText = 'Shipped';
-                                $statusClass = 'bg-warning';
-                            } elseif($order->fulfillment_status == 'fulfilled') {
-                                $statusText = 'Fulfilled';
-                                $statusClass = 'bg-success';
-                            } else {
-                                $statusText = 'Unknown';
-                                $statusClass = 'bg-dark';
-                            }
-                        @endphp
+                                if ($order->is_cancelled) {
+                                    $statusText = 'Cancelled';
+                                    $statusClass = 'bg-danger';
+                                } elseif ($order->is_refund) {
+                                    $statusText = 'Refunded';
+                                    $statusClass = 'bg-warning';
+                                } elseif ($order->allocated == 0) {
+                                    $statusText = 'Pending Allocation';
+                                    $statusClass = 'bg-secondary';
+                                } elseif ($order->allocated == 1 && empty($order->pick_ticket_id)) {
+                                    $statusText = 'Allocated';
+                                    $statusClass = 'bg-info';
+                                } elseif (!empty($order->pick_ticket_id) && empty($order->shipment_id)) {
+                                    $statusText = 'Pick Ticket Generated';
+                                    $statusClass = 'bg-primary';
+                                } elseif (!empty($order->shipment_id) && $order->fulfillment_status != 'fulfilled') {
+                                    $statusText = 'Shipped';
+                                    $statusClass = 'bg-warning';
+                                } elseif ($order->fulfillment_status == 'fulfilled') {
+                                    $statusText = 'Fulfilled';
+                                    $statusClass = 'bg-success';
+                                } else {
+                                    $statusText = 'Unknown';
+                                    $statusClass = 'bg-dark';
+                                }
+                            @endphp
 
-                        <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
+                            <span class="badge {{ $statusClass }}">{{ $statusText }}</span>
 
                         </div>
 
@@ -103,19 +103,19 @@
             </div>
 
             <div class="col-lg-4 col-md-12 mt-4 mt-lg-0">
-               <div class="card mb-4">
-                        <div class="card-body">
-                            <h6 class="card-title mb-4">Price</h6>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title mb-4">Price</h6>
 
-                            <!-- Outlined box for the total -->
-                            <div class="card border p-3">
-                                <div class="row justify-content-between fw-bold">
-                                    <div class="col text-start">Grand Total:</div>
-                                    <div class="col text-end">${{ $order->shopify_shipping_total }}</div>
-                                </div>
+                        <!-- Outlined box for the total -->
+                        <div class="card border p-3">
+                            <div class="row justify-content-between fw-bold">
+                                <div class="col text-start">Grand Total:</div>
+                                <div class="col text-end">${{ $order->shopify_shipping_total }}</div>
                             </div>
                         </div>
                     </div>
+                </div>
 
 
                 <div class="card">
@@ -130,21 +130,25 @@
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <div class="row mb-2">
-                                        <div class="col-6 text-end fw-bold">Invoice No :</div>
+                                        <div class="col-6 text-end fw-bold">Invoice No:</div>
                                         <div class="col-6 text-start">
-                                            <a href="#">#{{ $order->am_invoice_id ?? 'N/A' }}</a>
+                                            <a href="#">{{ $order->am_invoice_id ?? 'N/A' }}</a>
                                         </div>
                                     </div>
                                     <div class="row mb-2">
-                                        <div class="col-6 text-end fw-bold">Payment Id :</div>
+                                        <div class="col-6 text-end fw-bold">Transaction Id:</div>
                                         <div class="col-6 text-start">{{ $payment->payment_id ?? 'N/A' }}</div>
                                     </div>
                                     <div class="row mb-2">
-                                        <div class="col-6 text-end fw-bold">Payment Type :</div>
+                                        <div class="col-6 text-end fw-bold">Payment Type:</div>
                                         <div class="col-6 text-start">{{ $payment->payment_type ?? 'N/A' }}</div>
                                     </div>
                                     <div class="row mb-2">
-                                        <div class="col-6 text-end fw-bold">Date :</div>
+                                        <div class="col-6 text-end fw-bold">Amount Credited:</div>
+                                        <div class="col-6 text-start">{{ $payment->amt_cr ?? 'N/A' }}</div>
+                                    </div>
+                                      <div class="row mb-2">
+                                        <div class="col-6 text-end fw-bold">Date:</div>
                                         <div class="col-6 text-start">{{ $payment->date ?? 'N/A' }}</div>
                                     </div>
                                 </div>
@@ -195,18 +199,18 @@
                 </div>
             </div>
             <div class="col-12 mt-3 text-end">
-               @if(strtolower($order->shopify_fullfiment_status) === 'fulfilled'&& !empty($order->shipment_id) && empty(optional($order->returnOrder)->return_authorization_id)&& !empty($order->payment_id))
-                <button class="btn btn-danger returnOrderBtn" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
-                    Return Order
-                </button>
+                @if(strtolower($order->shopify_fullfiment_status) === 'fulfilled' && !empty($order->shipment_id) && empty(optional($order->returnOrder)->return_authorization_id) && !empty($order->payment_id))
+                    <button class="btn btn-danger returnOrderBtn" data-bs-toggle="modal" data-bs-target="#returnOrderModal">
+                        Return Order
+                    </button>
                 @endif
 
                 @if(optional($order->returnOrder)->return_authorization_id)
-                <button type="button" class="btn btn-warning create-credit-memo" data-order-id="{{ $order->id }}">Create
-                    Credit Memo
-                </button>
+                    <button type="button" class="btn btn-warning create-credit-memo" data-order-id="{{ $order->id }}">Create
+                        Credit Memo
+                    </button>
                 @endif
-                @if($order->is_refund == 0 && !empty($order->payment_id)&& !empty(optional($order->returnOrder)->return_authorization_id))
+                @if($order->is_refund == 0 && !empty($order->payment_id) && !empty(optional($order->returnOrder)->return_authorization_id))
                     <button type="button" class="btn btn-success refund-order-btn" data-order-id="{{ $order->id }}">
                         Refund Order
                     </button>

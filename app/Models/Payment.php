@@ -12,7 +12,11 @@ class Payment extends Model
         'payment_id',
         'customer_id',
         'payment_type',
-        'amt_dr',
+        'amt_cr',
         'date',
+        'transaction_id',
+        'reference',
+        'gl_acct' ,
+        'date'
     ];
 }
