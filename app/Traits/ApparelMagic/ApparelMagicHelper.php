@@ -3,6 +3,7 @@
 namespace App\Traits\ApparelMagic;
 
 use App\Jobs\ApparelMagic\GetApparelMagicCustomers;
+use App\Jobs\ApparelMagic\GetApparelMagicInventory;
 use App\Models\Am_Account;
 use App\Models\Am_Customer;
 use App\Models\Am_Division;
@@ -15,6 +16,7 @@ use App\Models\ProductVariant;
 use App\Models\ReturnOrder;
 use App\Models\Setting;
 use App\Models\SizeRange;
+use App\Models\StockReport;
 use App\Traits\ApiHelper;
 use DateTime;
 use Carbon\Carbon;
@@ -1405,5 +1407,70 @@ trait ApparelMagicHelper
         return [];
     }
 
+public function getApparelWareHouseStock($settings, $page_size = 100)
+{
+    try {
+        $apparelUrl   = $settings->firstWhere('code', 'apparelmagic_api_endpoint')->value;
+        $token        = $settings->firstWhere('code', 'apparelmagic_token')->value;
+        $warehouse_id = 1006;
 
+        $url     = $apparelUrl . '/sku_warehouse';
+        $last_id = null;
+
+        do {
+            $time = time();
+            $params = [
+                'time'         => (string) $time,
+                'token'        => (string) $token,
+                'warehouse_id' => $warehouse_id,
+                'pagination'   => [
+                    'page_size' => $page_size,
+                ],
+            ];
+
+            if ($last_id) {
+                $params['pagination']['last_id'] = $last_id;
+            }
+
+            info("Fetching Apparel page", ['url' => $url, 'params' => $params]);
+
+            $response = $this->apparelMagicApiRequest($url, $params);
+            info("ApparelMagic Warehouse Stock Response: " . json_encode($response));
+
+            if (!empty($response['response']) && is_array($response['response'])) {
+                foreach ($response['response'] as $stock) {
+                    $variant = ProductVariant::where('sku_id', $stock['sku_id'])->first();
+                    if ($variant) {
+                        $stockReport = StockReport::where('shopify_barcode', $variant->upc_display)->first();
+                        if ($stockReport) {
+                            $stockReport->update([
+                                'am_sku_id'        => $stock['sku_id'] ?? 0,
+                                'am_available_qty' => $stock['qty_open_sales'] ?? 0,
+                                'upc_display'      => $variant->upc_display,
+                                'product_name'     => $variant->sku_concat ?? '',
+                            ]);
+                        }
+                    }
+                }
+
+                $meta    = $response['meta']['pagination'] ?? [];
+                $last_id = $meta['last_id'] ?? null;
+            } else {
+                info("Breaking pagination due to empty/error response", ['response' => $response]);
+                $last_id = null;
+            }
+
+            usleep(200000); 
+
+        } while ($last_id !== null);
+
+        info("Warehouse stock fetch completed");
+
+    } catch (Exception $e) {
+        Log::error('Error in getApparelWareHouseStock', [
+            'message' => $e->getMessage()
+        ]);
+    }
 }
+}
+

@@ -2,12 +2,14 @@
 
 namespace App\Traits\Shopify;
 
+use App\Jobs\Shopify\GetShopifyInventory;
 use App\Jobs\Shopify\GetShopifyProducts;
 use App\Models\Order;
 use App\Models\OrderProduct;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Setting;
+use App\Models\StockReport;
 use App\Traits\ApiHelper;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -641,8 +643,84 @@ trait ShopifyHelper
                 return null;
             }
         } catch (Exception $e) {
-            dd($e);
+           Log::info("failed to fetch the orders");
         }
     }
+public function fetchShopifyInventoryItems($settings, $nextPageCursor = null, $limit = 50)
+{
+    // info("nextPagecursor".json_encode($nextPageCursor));
+    $settings = Setting::where('type', 'shopify')->where('status', 1)->get();
+    $location = $settings->where('code', 'shopify_location')->first()->value;
+
+    $queryString = '
+        query inventoryItems($location: ID!, $limit: Int!, $nextPageCursor: String) {
+            inventoryItems(first: $limit, after: $nextPageCursor) {
+                edges {
+                    cursor
+                    node {
+                        id
+                        tracked
+                        sku
+                        variant {
+                            id
+                            title
+                            sku
+                            barcode
+                        }
+                        inventoryLevel(locationId:$location) {
+                            quantities(names: ["available"]) {
+                                name
+                                quantity
+                            }
+                        }
+                    }
+                }
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+            }
+        }
+    ';
+
+    $variables = [
+        'location'       => $location,
+        'limit'          => (int)$limit,
+        'nextPageCursor' => $nextPageCursor
+    ];
+
+    $result = $this->getHttp($queryString, $variables);
+
+    info("shopifyInventoryItems: " . json_encode($result));
+
+    if (!empty($result['data']['inventoryItems']['edges'])) {
+        foreach ($result['data']['inventoryItems']['edges'] as $edge) {
+            $item = $edge['node'];
+
+            $availableQty = $item['inventoryLevel']['quantities'][0]['quantity'] ?? 0;
+            $barcode = $item['variant']['barcode'] ?? null;
+
+            StockReport::updateOrCreate(
+                ['shopify_sku_id' => str_replace('gid://shopify/InventoryItem/','',$item['id'])], 
+                [
+                    'shopify_available_qty' => $availableQty,
+                    'shopify_barcode'       => $barcode,
+                ]
+            );
+        }
+
+        $pageInfo = $result['data']['inventoryItems']['pageInfo'] ?? null;
+        $nextPageCursor = $pageInfo['endCursor'] ?? null;
+        
+
+        if (!empty($pageInfo['hasNextPage']) && $nextPageCursor) {
+            GetShopifyInventory::dispatch($settings, $nextPageCursor, $limit);
+        }
+    } else {
+        info("No inventory items found for Shopify location: " . $location);
+    }
+}
+
+
 
 }
