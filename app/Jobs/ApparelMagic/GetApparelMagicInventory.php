@@ -17,10 +17,9 @@ class GetApparelMagicInventory implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct($settings,$startAfter,$pageSize)
+    public function __construct($settings,$pageSize)
     {
        $this->settings=$settings;
-       $this->startAfter=$startAfter;
        $this->pageSize=$pageSize;
     }
 
@@ -29,6 +28,6 @@ class GetApparelMagicInventory implements ShouldQueue
      */
     public function handle(): void
     {
-       $this->getApparelWareHouseStock($this->settings, $this->startAfter, $this->pageSize);
+       $this->getApparelWareHouseStock($this->settings,  $this->pageSize);
     }
 }

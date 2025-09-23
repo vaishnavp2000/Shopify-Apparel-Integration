@@ -1446,8 +1446,8 @@ public function getApparelWareHouseStock($settings, $page_size = 100)
                             $stockReport->update([
                                 'am_sku_id'        => $stock['sku_id'] ?? 0,
                                 'am_available_qty' => $stock['qty_open_sales'] ?? 0,
-                                'upc_display'      => $variant->upc_display,
-                                'product_name'     => $variant->sku_concat ?? '',
+                                'upc_display'      => $variant->upc_display??0,
+                                'produt_name'     => $variant->sku_concat ?? '',
                             ]);
                         }
                     }

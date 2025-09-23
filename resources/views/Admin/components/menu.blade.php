@@ -69,6 +69,16 @@
 
                 </a>
             </li>
+             <li>
+               <a href="{{route('admin.inventory-report.index')}}" @if (request()->fullUrl() ==
+                    route('admin.inventory-report.index')) class="active" @endif>
+                    <span class="nav-link-icon">
+                        <i class="fa fa-warehouse"></i>
+                    </span>
+                    <span>StockReports</span>
+
+                </a>
+            </li>
             <li>
                 <a href="{{route('admin.settings.index',['platform' => 'settings'])}}"
                     @if (request()->fullUrl() == route('admin.settings.index', ['platform' => 'settings'])) class="active" @endif>

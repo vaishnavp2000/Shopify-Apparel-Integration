@@ -30,6 +30,6 @@ class FetchApparelInventory extends Command
     public function handle()
     {
         $settings=Setting::where('type', 'apparelmagic')->where('status', 1)->get();
-        GetApparelMagicInventory::dispatch($settings,$startAftter=null,$pageSize=100);
+        GetApparelMagicInventory::dispatch($settings,$pageSize=100);
     }
 }

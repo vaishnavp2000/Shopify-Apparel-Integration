@@ -128,6 +128,7 @@ trait ShopifyHelper
 
                             ],
                             [
+                                
                                 'shopify_inventory_item_id' => str_replace('gid://shopify/InventoryItem/', '', $productVariant['node']['inventoryItem']['id'] ?? null),
                                 'style_number' => $products->style_number ?? null,
                                 'shopify_sku' => $productVariant['node']['sku'] ?? null,

@@ -29,6 +29,8 @@ Route::prefix('admin')->name('admin.')->namespace('App\Http\Controllers\Admin')-
         Route::post('create-refund', [App\Http\Controllers\Admin\OrderController::class, 'createAmRefund'])->name('create-refund');
         Route::resource('profile', App\Http\Controllers\Admin\ProfileController::class);
         Route::post('update-password', [App\Http\Controllers\Admin\ProfileController::class,'update_password'])->name('update-password');
+        Route::resource('inventory-report', App\Http\Controllers\Admin\StockReportController::class);
+        Route::get('inventory-report-export', [App\Http\Controllers\Admin\StockReportController::class,'StockExport'])->name('inventory-report-export');
 
 
 

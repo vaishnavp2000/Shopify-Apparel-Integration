@@ -25,7 +25,6 @@ class HomeController extends Controller
     }
     public function index(Request $request)
     {
-        $this->getApparelWareHouseStock();
        $productCount=Product::count();
        $orderCount=Order::count();
        return view('admin.home', [
